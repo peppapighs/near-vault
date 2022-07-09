@@ -39,6 +39,7 @@ impl Contract {
         self.accounts.insert(
             &name,
             &(Account {
+                owner_id: env::signer_account_id().clone(),
                 name: name.clone(),
                 balance: 0u128,
             }),
@@ -62,8 +63,9 @@ impl Contract {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Default)]
+#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Account {
+    pub owner_id: AccountId,
     pub name: String,
     pub balance: Balance,
 }
@@ -87,7 +89,7 @@ mod tests {
     fn test_new() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let _contract = Contract::new(accounts(1), accounts(2));
+        Contract::new(accounts(1), accounts(2));
     }
 
     #[test]
@@ -95,7 +97,7 @@ mod tests {
     fn test_default() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let _contract = Contract::default();
+        Contract::default();
     }
 
     #[test]
@@ -105,11 +107,10 @@ mod tests {
         let mut contract = Contract::new(accounts(1), accounts(2));
 
         contract.create_account("account".into());
-        assert_eq!(
-            contract.get_account("account".into()).name,
-            "account".to_string()
-        );
-        assert_eq!(contract.get_account("account".into()).balance, 0u128);
+        let account = contract.get_account("account".into());
+        assert_eq!(account.owner_id, accounts(1));
+        assert_eq!(account.name, "account".to_string());
+        assert_eq!(account.balance, 0u128);
         assert_eq!(
             contract.user_accounts.get(&accounts(1)).unwrap(),
             vec!["account"]
@@ -125,5 +126,11 @@ mod tests {
 
         contract.create_account("account".into());
         contract.create_account("account".into());
+    }
+
+    #[test]
+    #[should_panic(expected = "The contract is not initialized")]
+    fn test_default_account() {
+        Account::default();
     }
 }
