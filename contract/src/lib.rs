@@ -14,7 +14,7 @@ pub struct Contract {
     // Account name -> Account
     pub accounts: LookupMap<String, Account>,
 
-    // User's Account ID -> User's Accounts
+    // User's Account ID -> List of account names
     pub user_accounts: LookupMap<AccountId, Vec<String>>,
 }
 
@@ -30,8 +30,39 @@ impl Contract {
             user_accounts: LookupMap::new(b"u".to_vec()),
         }
     }
+
+    pub fn create_account(&mut self, name: String) {
+        // Account name must be unique
+        require!(!self.accounts.contains_key(&name), "Account already exists");
+
+        // Create new empty account
+        self.accounts.insert(
+            &name,
+            &(Account {
+                name: name.clone(),
+                balance: 0u128,
+            }),
+        );
+
+        // Add account to user's list of accounts
+        let mut user_account = self
+            .user_accounts
+            .get(&env::signer_account_id())
+            .unwrap_or(vec![]);
+        user_account.push(name.clone());
+        self.user_accounts
+            .insert(&env::signer_account_id(), &user_account);
+    }
+
+    pub fn get_account(&self, name: String) -> Account {
+        // Get account by account name
+        self.accounts
+            .get(&name)
+            .unwrap_or_else(|| panic!("Account does not exist"))
+    }
 }
 
+#[derive(BorshDeserialize, BorshSerialize, Default)]
 pub struct Account {
     pub name: String,
     pub balance: Balance,
@@ -65,5 +96,34 @@ mod tests {
         let context = get_context(accounts(1));
         testing_env!(context.build());
         let _contract = Contract::default();
+    }
+
+    #[test]
+    fn test_create_account() {
+        let context = get_context(accounts(1));
+        testing_env!(context.build());
+        let mut contract = Contract::new(accounts(1), accounts(2));
+
+        contract.create_account("account".into());
+        assert_eq!(
+            contract.get_account("account".into()).name,
+            "account".to_string()
+        );
+        assert_eq!(contract.get_account("account".into()).balance, 0u128);
+        assert_eq!(
+            contract.user_accounts.get(&accounts(1)).unwrap(),
+            vec!["account"]
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "Account already exists")]
+    fn test_create_duplicate_account() {
+        let context = get_context(accounts(1));
+        testing_env!(context.build());
+        let mut contract = Contract::new(accounts(1), accounts(2));
+
+        contract.create_account("account".into());
+        contract.create_account("account".into());
     }
 }
