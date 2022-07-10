@@ -1,6 +1,11 @@
+use msg::{DepositPayload, TransferMessage};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
-use near_sdk::{env, near_bindgen, require, AccountId, Balance, PanicOnDefault};
+use near_sdk::json_types::U128;
+use near_sdk::serde_json;
+use near_sdk::{env, near_bindgen, require, AccountId, Balance, PanicOnDefault, PromiseOrValue};
+
+mod msg;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -20,6 +25,7 @@ pub struct Contract {
 
 #[near_bindgen]
 impl Contract {
+    // Contract initialize function
     #[init]
     pub fn new(owner_id: AccountId, token_id: AccountId) -> Self {
         require!(!env::state_exists(), "Already initialized");
@@ -31,6 +37,7 @@ impl Contract {
         }
     }
 
+    // Create new account with unique name
     pub fn create_account(&mut self, name: String) {
         // Account name must be unique
         require!(!self.accounts.contains_key(&name), "Account already exists");
@@ -55,11 +62,59 @@ impl Contract {
             .insert(&env::signer_account_id(), &user_account);
     }
 
-    pub fn get_account(&self, name: String) -> Account {
+    // Receiver for NEP-21 token transfer
+    pub fn ft_on_transfer(
+        &mut self,
+        _sender_id: AccountId,
+        amount: U128,
+        msg: String,
+    ) -> PromiseOrValue<U128> {
+        // Contract caller must be the specified token
+        require!(
+            env::predecessor_account_id() == self.token_id,
+            "Unsupported token type"
+        );
+
+        // Parse JSON message into TransferMessage and match each action
+        let message = serde_json::from_str::<TransferMessage>(&msg[..])
+            .unwrap_or_else(|_| panic!("Invalid transfer message format"));
+        match message.action.as_str() {
+            "deposit" => {
+                let payload = serde_json::from_str::<DepositPayload>(&message.payload[..])
+                    .unwrap_or_else(|_| panic!("Invalid deposit payload format"));
+                self.deposit(payload.account_name, amount);
+
+                // Return 0 as we transfer all the tokens to the account
+                PromiseOrValue::Value(0.into())
+            }
+            _ => panic!("Unsupported action"),
+        }
+    }
+
+    // Get balance of an account
+    pub fn get_balance(&self, name: String) -> U128 {
         // Get account by account name
         self.accounts
             .get(&name)
             .unwrap_or_else(|| panic!("Account does not exist"))
+            .balance
+            .into()
+    }
+
+    // Callback function for depositing tokens
+    #[private]
+    pub fn deposit(&mut self, account_name: String, amount: U128) {
+        // Get account by account name
+        let mut account = self
+            .accounts
+            .get(&account_name)
+            .unwrap_or_else(|| panic!("Account does not exist"));
+        // Add amount to account balance
+        account.balance = account
+            .balance
+            .checked_add(amount.into())
+            .unwrap_or_else(|| panic!("Balance overflow"));
+        self.accounts.insert(&account_name, &account);
     }
 }
 
@@ -107,10 +162,11 @@ mod tests {
         let mut contract = Contract::new(accounts(1), accounts(2));
 
         contract.create_account("account".into());
-        let account = contract.get_account("account".into());
+        let account = contract.accounts.get(&"account".to_owned()).unwrap();
         assert_eq!(account.owner_id, accounts(1));
-        assert_eq!(account.name, "account".to_string());
+        assert_eq!(account.name, "account".to_owned());
         assert_eq!(account.balance, 0u128);
+        assert_eq!(contract.get_balance("account".to_owned()), 0.into());
         assert_eq!(
             contract.user_accounts.get(&accounts(1)).unwrap(),
             vec!["account"]
@@ -132,5 +188,87 @@ mod tests {
     #[should_panic(expected = "The contract is not initialized")]
     fn test_default_account() {
         Account::default();
+    }
+
+    #[test]
+    #[should_panic(expected = "Account does not exist")]
+    fn test_get_balance_non_existent_account() {
+        let context = get_context(accounts(1));
+        testing_env!(context.build());
+        let contract = Contract::new(accounts(1), accounts(2));
+
+        contract.get_balance("account".into());
+    }
+
+    #[test]
+    fn test_deposit() {
+        let context = get_context(accounts(1));
+        testing_env!(context.build());
+        let mut contract = Contract::new(accounts(1), accounts(2));
+
+        contract.create_account("account".into());
+        let context = get_context(accounts(2));
+        testing_env!(context.build());
+        contract.ft_on_transfer(
+            accounts(1),
+            1.into(),
+            "{\"action\":\"deposit\",\"payload\":\"{\\\"account_name\\\":\\\"account\\\"}\"}"
+                .to_owned(),
+        );
+        assert_eq!(contract.get_balance("account".to_owned()), 1.into());
+    }
+
+    #[test]
+    #[should_panic(expected = "Unsupported token type")]
+    fn test_ft_on_transfer_unsupported_token() {
+        let context = get_context(accounts(1));
+        testing_env!(context.build());
+        let mut contract = Contract::new(accounts(1), accounts(2));
+
+        contract.ft_on_transfer(accounts(1), 1.into(), "{}".to_owned());
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid transfer message format")]
+    fn test_ft_on_transfer_invalid_transfer_message_format() {
+        let context = get_context(accounts(1));
+        testing_env!(context.build());
+        let mut contract = Contract::new(accounts(1), accounts(2));
+
+        let context = get_context(accounts(2));
+        testing_env!(context.build());
+        contract.ft_on_transfer(accounts(1), 1.into(), "{}".to_owned());
+    }
+
+    #[test]
+    #[should_panic(expected = "Unsupported action")]
+    fn test_ft_on_transfer_unsupported_action() {
+        let context = get_context(accounts(1));
+        testing_env!(context.build());
+        let mut contract = Contract::new(accounts(1), accounts(2));
+
+        let context = get_context(accounts(2));
+        testing_env!(context.build());
+        contract.ft_on_transfer(
+            accounts(1),
+            1.into(),
+            "{\"action\":\"\",\"payload\":\"\"}".to_owned(),
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid deposit payload format")]
+    fn test_ft_on_transfer_invalid_deposit_payload_format() {
+        let context = get_context(accounts(1));
+        testing_env!(context.build());
+        let mut contract = Contract::new(accounts(1), accounts(2));
+
+        let context = get_context(accounts(2));
+        testing_env!(context.build());
+        contract.ft_on_transfer(
+            accounts(1),
+            1.into(),
+            "{\"action\":\"deposit\",\"payload\":\"\"}".to_owned(),
+        );
     }
 }
