@@ -330,4 +330,58 @@ pub mod tests {
         testing_env!(context.build());
         contract.transfer("account_1".into(), "account_2".into(), 2.into());
     }
+
+    #[test]
+    fn test_transfer_fee_to_owner() {
+        let context = get_context(accounts(1));
+        testing_env!(context.build());
+        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+
+        contract.create_account("account_1".into());
+        let context = get_context(accounts(3));
+        testing_env!(context.build());
+        contract.create_account("account_2".into());
+        let context = get_context(accounts(2));
+        testing_env!(context.build());
+        contract.ft_on_transfer(
+            accounts(1),
+            100.into(),
+            "{\"action\":\"deposit\",\"payload\":\"{\\\"account_name\\\":\\\"account_1\\\"}\"}"
+                .to_owned(),
+        );
+        contract.ft_on_transfer(
+            accounts(3),
+            100.into(),
+            "{\"action\":\"deposit\",\"payload\":\"{\\\"account_name\\\":\\\"account_2\\\"}\"}"
+                .to_owned(),
+        );
+
+        let context = get_context(accounts(1));
+        testing_env!(context.build());
+        contract.transfer("account_1".into(), "account_2".into(), 100.into());
+        contract.transfer_fee_to_owner(1.into());
+        assert_eq!(contract.total_transfer_fee, 0u128);
+    }
+
+    #[test]
+    #[should_panic(expected = "Unauthorized access")]
+    fn test_transfer_fee_to_owner_unauthorized_access() {
+        let context = get_context(accounts(1));
+        testing_env!(context.build());
+        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+
+        let context = get_context(accounts(2));
+        testing_env!(context.build());
+        contract.transfer_fee_to_owner(1.into());
+    }
+
+    #[test]
+    #[should_panic(expected = "Balance overflow")]
+    fn test_transfer_fee_to_owner_not_enough_token() {
+        let context = get_context(accounts(1));
+        testing_env!(context.build());
+        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+
+        contract.transfer_fee_to_owner(1.into());
+    }
 }

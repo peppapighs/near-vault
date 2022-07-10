@@ -192,6 +192,22 @@ impl Contract {
             .insert(&receiver_account_name, &receiver_account);
     }
 
+    // Transfer all fees to owner
+    pub fn transfer_fee_to_owner(&mut self, amount: U128) -> Promise {
+        require!(
+            env::signer_account_id() == self.owner_id,
+            "Unauthorized access"
+        );
+
+        self.total_transfer_fee = self
+            .total_transfer_fee
+            .checked_sub(amount.into())
+            .unwrap_or_else(|| panic!("Balance overflow"));
+
+        // Transfer fees to owner
+        ext_ft_core::ext(self.token_id.clone()).ft_transfer(self.owner_id.clone(), amount, None)
+    }
+
     // Get contract fee
     pub fn get_fees(&self) -> FeeMessage {
         FeeMessage {
