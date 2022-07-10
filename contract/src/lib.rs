@@ -17,7 +17,7 @@ pub struct Contract {
     // Contract Owner's Account ID
     pub owner_id: AccountId,
 
-    // NEP-21 Token Account ID
+    // NEP-141 Token Account ID
     pub token_id: AccountId,
 
     // Transfer fee for cross-owner transfer
@@ -81,7 +81,7 @@ impl Contract {
             .insert(&env::signer_account_id(), &user_account);
     }
 
-    // Receiver for NEP-21 token transfer
+    // Receiver for NEP-141 token transfer
     pub fn ft_on_transfer(
         &mut self,
         _sender_id: AccountId,
