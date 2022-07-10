@@ -47,7 +47,6 @@ impl Contract {
             &name,
             &(Account {
                 owner_id: env::signer_account_id().clone(),
-                name: name.clone(),
                 balance: 0u128,
             }),
         );
@@ -121,7 +120,6 @@ impl Contract {
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Account {
     pub owner_id: AccountId,
-    pub name: String,
     pub balance: Balance,
 }
 
@@ -164,7 +162,6 @@ mod tests {
         contract.create_account("account".into());
         let account = contract.accounts.get(&"account".to_owned()).unwrap();
         assert_eq!(account.owner_id, accounts(1));
-        assert_eq!(account.name, "account".to_owned());
         assert_eq!(account.balance, 0u128);
         assert_eq!(contract.get_balance("account".to_owned()), 0.into());
         assert_eq!(
