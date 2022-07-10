@@ -1,6 +1,7 @@
 #[cfg(test)]
 pub mod tests {
     use crate::{Account, Contract, FeeMessage};
+    use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
     use near_sdk::test_utils::{accounts, VMContextBuilder};
     use near_sdk::{testing_env, AccountId};
 
@@ -17,7 +18,7 @@ pub mod tests {
     fn test_new() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        Contract::new(accounts(1), accounts(2), 1, 100);
     }
 
     #[test]
@@ -32,12 +33,12 @@ pub mod tests {
     fn test_create_account() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         contract.create_account("account".into());
         let account = contract.accounts.get(&"account".to_owned()).unwrap();
         assert_eq!(account.owner_id, accounts(1));
-        assert_eq!(account.balance, 0u128);
+        assert_eq!(account.balance, 0);
         assert_eq!(contract.get_balance("account".to_owned()), 0.into());
         assert_eq!(
             contract.user_accounts.get(&accounts(1)).unwrap(),
@@ -46,8 +47,8 @@ pub mod tests {
         assert_eq!(
             contract.get_fees(),
             FeeMessage {
-                transfer_fee_numerator: 1u128,
-                transfer_fee_denominator: 100u128,
+                transfer_fee_numerator: 1,
+                transfer_fee_denominator: 100,
             }
         );
     }
@@ -57,7 +58,7 @@ pub mod tests {
     fn test_create_duplicate_account() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         contract.create_account("account".into());
         contract.create_account("account".into());
@@ -74,7 +75,7 @@ pub mod tests {
     fn test_get_balance_non_existent_account() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         contract.get_balance("account".into());
     }
@@ -83,7 +84,7 @@ pub mod tests {
     fn test_deposit() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         contract.create_account("account".into());
         let context = get_context(accounts(2));
@@ -102,7 +103,7 @@ pub mod tests {
     fn test_ft_on_transfer_unsupported_token() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         contract.ft_on_transfer(accounts(1), 1.into(), "{}".to_owned());
     }
@@ -112,7 +113,7 @@ pub mod tests {
     fn test_ft_on_transfer_invalid_transfer_message_format() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         let context = get_context(accounts(2));
         testing_env!(context.build());
@@ -124,7 +125,7 @@ pub mod tests {
     fn test_ft_on_transfer_unsupported_action() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         let context = get_context(accounts(2));
         testing_env!(context.build());
@@ -140,7 +141,7 @@ pub mod tests {
     fn test_ft_on_transfer_invalid_deposit_payload_format() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         let context = get_context(accounts(2));
         testing_env!(context.build());
@@ -155,7 +156,7 @@ pub mod tests {
     fn test_withdraw() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         contract.create_account("account".into());
         let context = get_context(accounts(2));
@@ -179,7 +180,7 @@ pub mod tests {
     fn test_withdraw_unauthorized_access() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         contract.create_account("account".into());
         let context = get_context(accounts(2));
@@ -201,7 +202,7 @@ pub mod tests {
     fn test_withdraw_not_enough_token() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         contract.create_account("account".into());
         let context = get_context(accounts(2));
@@ -222,7 +223,7 @@ pub mod tests {
     fn test_transfer_same_owner() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         contract.create_account("account_1".into());
         contract.create_account("account_2".into());
@@ -252,7 +253,7 @@ pub mod tests {
     fn test_transfer_different_owner() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         contract.create_account("account_1".into());
         let context = get_context(accounts(3));
@@ -278,7 +279,7 @@ pub mod tests {
         contract.transfer("account_1".into(), "account_2".into(), 100.into());
         assert_eq!(contract.get_balance("account_1".to_owned()), 0.into());
         assert_eq!(contract.get_balance("account_2".to_owned()), 199.into());
-        assert_eq!(contract.total_transfer_fee, 1u128);
+        assert_eq!(contract.total_transfer_fee, 1);
     }
 
     #[test]
@@ -286,7 +287,7 @@ pub mod tests {
     fn test_transfer_non_existent_sender_account() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         contract.transfer("account_1".into(), "account_2".into(), 1.into());
     }
@@ -296,7 +297,7 @@ pub mod tests {
     fn test_transfer_non_existent_receiver_account() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         contract.create_account("account_1".into());
         contract.transfer("account_1".into(), "account_2".into(), 1.into());
@@ -307,7 +308,7 @@ pub mod tests {
     fn test_transfer_not_enough_token() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         contract.create_account("account_1".into());
         contract.create_account("account_2".into());
@@ -335,7 +336,7 @@ pub mod tests {
     fn test_transfer_fee_to_owner() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         contract.create_account("account_1".into());
         let context = get_context(accounts(3));
@@ -360,7 +361,7 @@ pub mod tests {
         testing_env!(context.build());
         contract.transfer("account_1".into(), "account_2".into(), 100.into());
         contract.transfer_fee_to_owner(1.into());
-        assert_eq!(contract.total_transfer_fee, 0u128);
+        assert_eq!(contract.total_transfer_fee, 0);
     }
 
     #[test]
@@ -368,7 +369,7 @@ pub mod tests {
     fn test_transfer_fee_to_owner_unauthorized_access() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         let context = get_context(accounts(2));
         testing_env!(context.build());
@@ -380,7 +381,7 @@ pub mod tests {
     fn test_transfer_fee_to_owner_not_enough_token() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1u128, 100u128);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         contract.transfer_fee_to_owner(1.into());
     }

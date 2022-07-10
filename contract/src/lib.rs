@@ -1,15 +1,17 @@
-use msg::{DepositPayload, FeeMessage, TransferMessage};
+use msg::FeeMessage;
 use near_contract_standards::fungible_token::core::ext_ft_core;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::json_types::U128;
 use near_sdk::{
-    env, near_bindgen, require, serde_json, AccountId, Balance, PanicOnDefault, Promise,
-    PromiseOrValue,
+    env, near_bindgen, require, AccountId, Balance, PanicOnDefault, Promise, StorageUsage,
 };
 
-mod msg;
+pub mod msg;
+pub mod receiver;
 mod test;
+
+const ACCOUNT_NAME_MAX_LENGTH: usize = 256;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -30,6 +32,12 @@ pub struct Contract {
 
     // User's Account ID -> List of account names
     pub user_accounts: LookupMap<AccountId, Vec<String>>,
+
+    // Storage usage for new user
+    pub user_storage_usage: StorageUsage,
+
+    // Storage usage for new account
+    pub account_storage_usage: StorageUsage,
 }
 
 #[near_bindgen]
@@ -43,20 +51,30 @@ impl Contract {
         transfer_fee_denominator: u128,
     ) -> Self {
         require!(!env::state_exists(), "Already initialized");
-        Self {
+        let mut this = Self {
             owner_id,
             token_id,
             transfer_fee_numerator,
             transfer_fee_denominator,
-            total_transfer_fee: 0u128,
+            total_transfer_fee: 0,
             accounts: LookupMap::new(b"a".to_vec()),
             user_accounts: LookupMap::new(b"u".to_vec()),
-        }
+            user_storage_usage: 0,
+            account_storage_usage: 0,
+        };
+        this.measure_account_storage_usage();
+        this
     }
 
-    // Create new account with unique account_name
+    // Create new account with unique account name
     pub fn create_account(&mut self, account_name: String) {
-        // Account account_name must be unique
+        // Account name must not be longer than ACCOUNT_NAME_MAX_LENGTH
+        require!(
+            account_name.len() <= ACCOUNT_NAME_MAX_LENGTH,
+            "Account name too long"
+        );
+
+        // Account name must be unique
         require!(
             !self.accounts.contains_key(&account_name),
             "Account already exists"
@@ -67,7 +85,7 @@ impl Contract {
             &account_name,
             &(Account {
                 owner_id: env::signer_account_id().clone(),
-                balance: 0u128,
+                balance: 0,
             }),
         );
 
@@ -81,38 +99,9 @@ impl Contract {
             .insert(&env::signer_account_id(), &user_account);
     }
 
-    // Receiver for NEP-141 token transfer
-    pub fn ft_on_transfer(
-        &mut self,
-        _sender_id: AccountId,
-        amount: U128,
-        msg: String,
-    ) -> PromiseOrValue<U128> {
-        // Contract caller must be the specified token
-        require!(
-            env::predecessor_account_id() == self.token_id,
-            "Unsupported token type"
-        );
-
-        // Parse JSON message into TransferMessage and match each action
-        let message = serde_json::from_str::<TransferMessage>(&msg[..])
-            .unwrap_or_else(|_| panic!("Invalid transfer message format"));
-        match message.action.as_str() {
-            "deposit" => {
-                let payload = serde_json::from_str::<DepositPayload>(&message.payload[..])
-                    .unwrap_or_else(|_| panic!("Invalid deposit payload format"));
-                self.deposit(payload.account_name, amount);
-
-                // Return 0 as we transfer all the tokens to the account
-                PromiseOrValue::Value(0.into())
-            }
-            _ => panic!("Unsupported action"),
-        }
-    }
-
     // Withdraw tokens from account
     pub fn withdraw(&mut self, account_name: String, amount: U128) -> Promise {
-        // Get account by account_name
+        // Get account by account name
         let mut account = self
             .accounts
             .get(&account_name)
@@ -172,9 +161,9 @@ impl Contract {
         if receiver_account.owner_id != env::signer_account_id() {
             let transfer_fee = Balance::from(amount)
                 .checked_mul(self.transfer_fee_numerator)
-                .unwrap_or(0u128)
+                .unwrap_or(0)
                 .checked_div(self.transfer_fee_denominator)
-                .unwrap_or(0u128);
+                .unwrap_or(0);
             receiver_account.balance = receiver_account
                 .balance
                 .checked_sub(transfer_fee)
@@ -218,28 +207,41 @@ impl Contract {
 
     // Get balance of an account
     pub fn get_balance(&self, account_name: String) -> U128 {
-        // Get account by account account_name
+        // Get account by account account name
         self.accounts
             .get(&account_name)
             .unwrap_or_else(|| panic!("Account does not exist"))
             .balance
             .into()
     }
+}
 
-    // Callback function for depositing tokens
-    #[private]
-    fn deposit(&mut self, account_name: String, amount: U128) {
-        // Get account by account account_name
-        let mut account = self
-            .accounts
-            .get(&account_name)
-            .unwrap_or_else(|| panic!("Account does not exist"));
-        // Add amount to account balance
-        account.balance = account
-            .balance
-            .checked_add(amount.into())
-            .unwrap_or_else(|| panic!("Balance overflow"));
-        self.accounts.insert(&account_name, &account);
+impl Contract {
+    fn measure_account_storage_usage(&mut self) {
+        let initial_storage_usage = env::storage_usage();
+        let tmp_account_id = AccountId::new_unchecked("a".repeat(64));
+        let tmp_account_name = "a".repeat(ACCOUNT_NAME_MAX_LENGTH);
+
+        // Calculate storage usage for new user
+        self.user_accounts.insert(&tmp_account_id, &vec![]);
+        self.user_storage_usage = env::storage_usage() - initial_storage_usage;
+
+        // Calculate storage usage for new account
+        let initial_storage_usage = env::storage_usage();
+        self.accounts.insert(
+            &tmp_account_name,
+            &Account {
+                owner_id: tmp_account_id.clone(),
+                balance: 0,
+            },
+        );
+        self.user_accounts
+            .insert(&tmp_account_id, &vec![tmp_account_name.clone()]);
+        self.account_storage_usage = env::storage_usage() - initial_storage_usage;
+
+        // Clean up
+        self.accounts.remove(&tmp_account_name);
+        self.user_accounts.remove(&tmp_account_id);
     }
 }
 
