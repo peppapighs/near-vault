@@ -12,3 +12,10 @@ pub struct TransferMessage {
 pub struct DepositPayload {
     pub account_name: String,
 }
+
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
+#[serde(crate = "near_sdk::serde")]
+pub struct FeeMessage {
+    pub transfer_fee_numerator: u128,
+    pub transfer_fee_denominator: u128,
+}
