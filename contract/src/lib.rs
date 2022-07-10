@@ -103,7 +103,7 @@ impl Contract {
 
     // Callback function for depositing tokens
     #[private]
-    pub fn deposit(&mut self, account_name: String, amount: U128) {
+    fn deposit(&mut self, account_name: String, amount: U128) {
         // Get account by account name
         let mut account = self
             .accounts
