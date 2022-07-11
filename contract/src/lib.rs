@@ -5,7 +5,7 @@ use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::json_types::U128;
 use near_sdk::{
-    env, near_bindgen, require, AccountId, Balance, PanicOnDefault, Promise, StorageUsage,
+    env, near_bindgen, require, AccountId, Balance, PanicOnDefault, Promise, StorageUsage, assert_one_yocto,
 };
 
 pub mod msg;
@@ -91,7 +91,9 @@ impl Contract {
     }
 
     // Withdraw tokens from account
+    #[payable]
     pub fn withdraw(&mut self, account_name: String, amount: U128) -> Promise {
+        assert_one_yocto();
         require!(
             self.user_accounts.contains_key(&env::signer_account_id()),
             format!("The user {} is not registered", env::signer_account_id())
@@ -121,7 +123,6 @@ impl Contract {
     }
 
     // Transfer tokens to another account
-    #[payable]
     pub fn transfer(
         &mut self,
         sender_account_name: String,
@@ -184,7 +185,9 @@ impl Contract {
     }
 
     // Transfer all fees to owner
+    #[payable]
     pub fn transfer_fee_to_owner(&mut self, amount: U128) -> Promise {
+        assert_one_yocto();
         require!(
             env::signer_account_id() == self.owner_id,
             "Unauthorized access"
