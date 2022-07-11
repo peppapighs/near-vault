@@ -255,13 +255,6 @@ impl Contract {
         self.accounts.remove(&tmp_account_name);
         self.user_accounts.remove(&tmp_account_id);
         self.storage_balances.remove(&tmp_account_id);
-
-        log!(
-            "Storage usage => new user: {} bytes, new account: {} bytes, cost per byte: {}",
-            self.user_storage_usage,
-            self.account_storage_usage,
-            env::storage_byte_cost()
-        );
     }
 }
 
