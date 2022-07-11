@@ -212,8 +212,8 @@ pub mod tests {
                 .to_owned(),
         );
 
-        let context = get_context(accounts(1));
-        testing_env!(context.build());
+        let mut context = get_context(accounts(1));
+        testing_env!(context.attached_deposit(1).build());
         contract.withdraw("account".into(), 1.into());
 
         assert_eq!(contract.get_balance("account".to_owned()), 0.into());
@@ -239,8 +239,8 @@ pub mod tests {
                 .to_owned(),
         );
 
-        let context = get_context(accounts(3));
-        testing_env!(context.build());
+        let mut context = get_context(accounts(3));
+        testing_env!(context.attached_deposit(1).build());
         contract.withdraw("account".into(), 1.into());
     }
 
@@ -263,8 +263,8 @@ pub mod tests {
                 .to_owned(),
         );
 
-        let context = get_context(accounts(1));
-        testing_env!(context.build());
+        let mut context = get_context(accounts(1));
+        testing_env!(context.attached_deposit(1).build());
         contract.withdraw("account".into(), 2.into());
     }
 
@@ -416,9 +416,11 @@ pub mod tests {
                 .to_owned(),
         );
 
-        let context = get_context(accounts(1));
+        let mut context = get_context(accounts(1));
         testing_env!(context.build());
         contract.transfer("account_1".into(), "account_2".into(), 100.into());
+
+        testing_env!(context.attached_deposit(1).build());
         contract.transfer_fee_to_owner(1.into());
         assert_eq!(contract.total_transfer_fee, 0);
     }
@@ -430,18 +432,19 @@ pub mod tests {
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
-        let context = get_context(accounts(2));
-        testing_env!(context.build());
+        let mut context = get_context(accounts(2));
+        testing_env!(context.attached_deposit(1).build());
         contract.transfer_fee_to_owner(1.into());
     }
 
     #[test]
     #[should_panic(expected = "Balance overflow")]
     fn test_transfer_fee_to_owner_not_enough_token() {
-        let context = get_context(accounts(1));
+        let mut context = get_context(accounts(1));
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
+        testing_env!(context.attached_deposit(1).build());
         contract.transfer_fee_to_owner(1.into());
     }
 }

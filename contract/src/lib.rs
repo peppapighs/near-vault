@@ -5,7 +5,8 @@ use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::json_types::U128;
 use near_sdk::{
-    env, near_bindgen, require, AccountId, Balance, PanicOnDefault, Promise, StorageUsage, assert_one_yocto,
+    assert_one_yocto, env, near_bindgen, require, AccountId, Balance, PanicOnDefault, Promise,
+    StorageUsage,
 };
 
 pub mod msg;
@@ -92,7 +93,7 @@ impl Contract {
 
     // Withdraw tokens from account
     #[payable]
-    pub fn withdraw(&mut self, account_name: String, amount: U128) -> Promise {
+    pub fn withdraw(&mut self, account_name: String, amount: U128) -> Option<Promise> {
         assert_one_yocto();
         require!(
             self.user_accounts.contains_key(&env::signer_account_id()),
@@ -118,8 +119,17 @@ impl Contract {
             .unwrap_or_else(|| panic!("Balance overflow"));
         self.accounts.insert(&account_name, &account);
 
-        // Call token contract to transfer token to caller
-        ext_ft_core::ext(self.token_id.clone()).ft_transfer(env::signer_account_id(), amount, None)
+        // Contract owner cannot withdraw tokens from itself
+        if env::current_account_id() != env::signer_account_id() {
+            // Call token contract to transfer token to caller
+            Some(
+                ext_ft_core::ext(self.token_id.clone())
+                    .with_attached_deposit(1)
+                    .ft_transfer(env::signer_account_id(), amount, None),
+            )
+        } else {
+            None
+        }
     }
 
     // Transfer tokens to another account
@@ -186,11 +196,15 @@ impl Contract {
 
     // Transfer all fees to owner
     #[payable]
-    pub fn transfer_fee_to_owner(&mut self, amount: U128) -> Promise {
+    pub fn transfer_fee_to_owner(&mut self, amount: U128) -> Option<Promise> {
         assert_one_yocto();
         require!(
             env::signer_account_id() == self.owner_id,
             "Unauthorized access"
+        );
+        require!(
+            env::current_account_id() != self.owner_id,
+            "Contract cannot withdraw from itself"
         );
 
         self.total_transfer_fee = self
@@ -198,8 +212,17 @@ impl Contract {
             .checked_sub(amount.into())
             .unwrap_or_else(|| panic!("Balance overflow"));
 
-        // Transfer fees to owner
-        ext_ft_core::ext(self.token_id.clone()).ft_transfer(self.owner_id.clone(), amount, None)
+        // Contract owner cannot withdraw tokens from itself
+        if env::current_account_id() != env::signer_account_id() {
+            // Transfer fees to owner
+            Some(
+                ext_ft_core::ext(self.token_id.clone())
+                    .with_attached_deposit(1)
+                    .ft_transfer(self.owner_id.clone(), amount, None),
+            )
+        } else {
+            None
+        }
     }
 }
 
