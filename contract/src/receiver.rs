@@ -1,8 +1,9 @@
 use crate::msg::{DepositPayload, TransferMessage};
 use crate::{Contract, ContractExt};
 use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
+use near_sdk::borsh::BorshDeserialize;
 use near_sdk::json_types::U128;
-use near_sdk::{env, near_bindgen, require, serde_json, AccountId, PromiseOrValue};
+use near_sdk::{base64, env, near_bindgen, require, AccountId, PromiseOrValue};
 
 #[near_bindgen]
 impl FungibleTokenReceiver for Contract {
@@ -21,11 +22,13 @@ impl FungibleTokenReceiver for Contract {
         );
 
         // Parse JSON message into TransferMessage and match each action
-        let message = serde_json::from_str::<TransferMessage>(&msg[..])
+        let decoded_message =
+            base64::decode(&msg).unwrap_or_else(|_| panic!("Invalid transfer message format"));
+        let message = TransferMessage::try_from_slice(&decoded_message[..])
             .unwrap_or_else(|_| panic!("Invalid transfer message format"));
         match message.action.as_str() {
             "deposit" => {
-                let payload = serde_json::from_str::<DepositPayload>(&message.payload[..])
+                let payload = DepositPayload::try_from_slice(&message.payload[..])
                     .unwrap_or_else(|_| panic!("Invalid deposit payload format"));
                 self.internal_deposit(payload.account_name, amount);
 

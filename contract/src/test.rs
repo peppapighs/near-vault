@@ -1,10 +1,12 @@
 #[cfg(test)]
 pub mod tests {
+    use crate::msg::{DepositPayload, TransferMessage};
     use crate::{Account, Contract, ContractMetadata};
     use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
     use near_contract_standards::storage_management::StorageManagement;
+    use near_sdk::borsh::BorshSerialize;
     use near_sdk::test_utils::{accounts, VMContextBuilder};
-    use near_sdk::{env, testing_env, AccountId, Balance};
+    use near_sdk::{base64, env, testing_env, AccountId, Balance};
 
     fn get_context(predecessor_account_id: AccountId) -> VMContextBuilder {
         let mut builder = VMContextBuilder::new();
@@ -132,12 +134,19 @@ pub mod tests {
 
         let context = get_context(accounts(2));
         testing_env!(context.build());
-        contract.ft_on_transfer(
-            accounts(1),
-            1.into(),
-            "{\"action\":\"deposit\",\"payload\":\"{\\\"account_name\\\":\\\"account\\\"}\"}"
-                .to_owned(),
+        let msg = base64::encode(
+            (TransferMessage {
+                action: "deposit".to_owned(),
+                payload: (DepositPayload {
+                    account_name: "account".to_owned(),
+                })
+                .try_to_vec()
+                .unwrap(),
+            })
+            .try_to_vec()
+            .unwrap(),
         );
+        contract.ft_on_transfer(accounts(1), 1.into(), msg.clone());
         assert_eq!(contract.get_balance("account".to_owned()), 1.into());
     }
 
@@ -172,11 +181,15 @@ pub mod tests {
 
         let context = get_context(accounts(2));
         testing_env!(context.build());
-        contract.ft_on_transfer(
-            accounts(1),
-            1.into(),
-            "{\"action\":\"\",\"payload\":\"\"}".to_owned(),
+        let msg = base64::encode(
+            (TransferMessage {
+                action: String::new(),
+                payload: vec![],
+            })
+            .try_to_vec()
+            .unwrap(),
         );
+        contract.ft_on_transfer(accounts(1), 1.into(), msg.clone());
     }
 
     #[test]
@@ -188,11 +201,15 @@ pub mod tests {
 
         let context = get_context(accounts(2));
         testing_env!(context.build());
-        contract.ft_on_transfer(
-            accounts(1),
-            1.into(),
-            "{\"action\":\"deposit\",\"payload\":\"\"}".to_owned(),
+        let msg = base64::encode(
+            (TransferMessage {
+                action: "deposit".to_owned(),
+                payload: vec![],
+            })
+            .try_to_vec()
+            .unwrap(),
         );
+        contract.ft_on_transfer(accounts(1), 1.into(), msg.clone());
     }
 
     #[test]
@@ -206,12 +223,19 @@ pub mod tests {
 
         let context = get_context(accounts(2));
         testing_env!(context.build());
-        contract.ft_on_transfer(
-            accounts(1),
-            1.into(),
-            "{\"action\":\"deposit\",\"payload\":\"{\\\"account_name\\\":\\\"account\\\"}\"}"
-                .to_owned(),
+        let msg = base64::encode(
+            (TransferMessage {
+                action: "deposit".to_owned(),
+                payload: (DepositPayload {
+                    account_name: "account".to_owned(),
+                })
+                .try_to_vec()
+                .unwrap(),
+            })
+            .try_to_vec()
+            .unwrap(),
         );
+        contract.ft_on_transfer(accounts(1), 1.into(), msg.clone());
 
         let mut context = get_context(accounts(1));
         testing_env!(context.attached_deposit(1).build());
@@ -233,12 +257,19 @@ pub mod tests {
 
         let context = get_context(accounts(2));
         testing_env!(context.build());
-        contract.ft_on_transfer(
-            accounts(1),
-            1.into(),
-            "{\"action\":\"deposit\",\"payload\":\"{\\\"account_name\\\":\\\"account\\\"}\"}"
-                .to_owned(),
+        let msg = base64::encode(
+            (TransferMessage {
+                action: "deposit".to_owned(),
+                payload: (DepositPayload {
+                    account_name: "account".to_owned(),
+                })
+                .try_to_vec()
+                .unwrap(),
+            })
+            .try_to_vec()
+            .unwrap(),
         );
+        contract.ft_on_transfer(accounts(1), 1.into(), msg.clone());
 
         let mut context = get_context(accounts(3));
         testing_env!(context.attached_deposit(1).build());
@@ -257,12 +288,19 @@ pub mod tests {
 
         let context = get_context(accounts(2));
         testing_env!(context.build());
-        contract.ft_on_transfer(
-            accounts(1),
-            1.into(),
-            "{\"action\":\"deposit\",\"payload\":\"{\\\"account_name\\\":\\\"account\\\"}\"}"
-                .to_owned(),
+        let msg = base64::encode(
+            (TransferMessage {
+                action: "deposit".to_owned(),
+                payload: (DepositPayload {
+                    account_name: "account".to_owned(),
+                })
+                .try_to_vec()
+                .unwrap(),
+            })
+            .try_to_vec()
+            .unwrap(),
         );
+        contract.ft_on_transfer(accounts(1), 1.into(), msg.clone());
 
         let mut context = get_context(accounts(1));
         testing_env!(context.attached_deposit(1).build());
@@ -281,18 +319,32 @@ pub mod tests {
 
         let context = get_context(accounts(2));
         testing_env!(context.build());
-        contract.ft_on_transfer(
-            accounts(1),
-            1.into(),
-            "{\"action\":\"deposit\",\"payload\":\"{\\\"account_name\\\":\\\"account_1\\\"}\"}"
-                .to_owned(),
+        let msg = base64::encode(
+            (TransferMessage {
+                action: "deposit".to_owned(),
+                payload: (DepositPayload {
+                    account_name: "account_1".to_owned(),
+                })
+                .try_to_vec()
+                .unwrap(),
+            })
+            .try_to_vec()
+            .unwrap(),
         );
-        contract.ft_on_transfer(
-            accounts(1),
-            1.into(),
-            "{\"action\":\"deposit\",\"payload\":\"{\\\"account_name\\\":\\\"account_2\\\"}\"}"
-                .to_owned(),
+        contract.ft_on_transfer(accounts(1), 1.into(), msg.clone());
+        let msg = base64::encode(
+            (TransferMessage {
+                action: "deposit".to_owned(),
+                payload: (DepositPayload {
+                    account_name: "account_2".to_owned(),
+                })
+                .try_to_vec()
+                .unwrap(),
+            })
+            .try_to_vec()
+            .unwrap(),
         );
+        contract.ft_on_transfer(accounts(1), 1.into(), msg.clone());
 
         let context = get_context(accounts(1));
         testing_env!(context.build());
@@ -314,18 +366,32 @@ pub mod tests {
 
         let context = get_context(accounts(2));
         testing_env!(context.build());
-        contract.ft_on_transfer(
-            accounts(1),
-            100.into(),
-            "{\"action\":\"deposit\",\"payload\":\"{\\\"account_name\\\":\\\"account_1\\\"}\"}"
-                .to_owned(),
+        let msg = base64::encode(
+            (TransferMessage {
+                action: "deposit".to_owned(),
+                payload: (DepositPayload {
+                    account_name: "account_1".to_owned(),
+                })
+                .try_to_vec()
+                .unwrap(),
+            })
+            .try_to_vec()
+            .unwrap(),
         );
-        contract.ft_on_transfer(
-            accounts(3),
-            100.into(),
-            "{\"action\":\"deposit\",\"payload\":\"{\\\"account_name\\\":\\\"account_2\\\"}\"}"
-                .to_owned(),
+        contract.ft_on_transfer(accounts(1), 100.into(), msg.clone());
+        let msg = base64::encode(
+            (TransferMessage {
+                action: "deposit".to_owned(),
+                payload: (DepositPayload {
+                    account_name: "account_2".to_owned(),
+                })
+                .try_to_vec()
+                .unwrap(),
+            })
+            .try_to_vec()
+            .unwrap(),
         );
+        contract.ft_on_transfer(accounts(3), 100.into(), msg.clone());
 
         let context = get_context(accounts(1));
         testing_env!(context.build());
@@ -373,18 +439,32 @@ pub mod tests {
 
         let context = get_context(accounts(2));
         testing_env!(context.build());
-        contract.ft_on_transfer(
-            accounts(1),
-            1.into(),
-            "{\"action\":\"deposit\",\"payload\":\"{\\\"account_name\\\":\\\"account_1\\\"}\"}"
-                .to_owned(),
+        let msg = base64::encode(
+            (TransferMessage {
+                action: "deposit".to_owned(),
+                payload: (DepositPayload {
+                    account_name: "account_1".to_owned(),
+                })
+                .try_to_vec()
+                .unwrap(),
+            })
+            .try_to_vec()
+            .unwrap(),
         );
-        contract.ft_on_transfer(
-            accounts(1),
-            1.into(),
-            "{\"action\":\"deposit\",\"payload\":\"{\\\"account_name\\\":\\\"account_2\\\"}\"}"
-                .to_owned(),
+        contract.ft_on_transfer(accounts(1), 1.into(), msg.clone());
+        let msg = base64::encode(
+            (TransferMessage {
+                action: "deposit".to_owned(),
+                payload: (DepositPayload {
+                    account_name: "account_2".to_owned(),
+                })
+                .try_to_vec()
+                .unwrap(),
+            })
+            .try_to_vec()
+            .unwrap(),
         );
+        contract.ft_on_transfer(accounts(1), 1.into(), msg.clone());
 
         let context = get_context(accounts(1));
         testing_env!(context.build());
@@ -404,18 +484,32 @@ pub mod tests {
 
         let context = get_context(accounts(2));
         testing_env!(context.build());
-        contract.ft_on_transfer(
-            accounts(1),
-            100.into(),
-            "{\"action\":\"deposit\",\"payload\":\"{\\\"account_name\\\":\\\"account_1\\\"}\"}"
-                .to_owned(),
+        let msg = base64::encode(
+            (TransferMessage {
+                action: "deposit".to_owned(),
+                payload: (DepositPayload {
+                    account_name: "account_1".to_owned(),
+                })
+                .try_to_vec()
+                .unwrap(),
+            })
+            .try_to_vec()
+            .unwrap(),
         );
-        contract.ft_on_transfer(
-            accounts(3),
-            100.into(),
-            "{\"action\":\"deposit\",\"payload\":\"{\\\"account_name\\\":\\\"account_2\\\"}\"}"
-                .to_owned(),
+        contract.ft_on_transfer(accounts(1), 100.into(), msg.clone());
+        let msg = base64::encode(
+            (TransferMessage {
+                action: "deposit".to_owned(),
+                payload: (DepositPayload {
+                    account_name: "account_2".to_owned(),
+                })
+                .try_to_vec()
+                .unwrap(),
+            })
+            .try_to_vec()
+            .unwrap(),
         );
+        contract.ft_on_transfer(accounts(3), 100.into(), msg.clone());
 
         let mut context = get_context(accounts(1));
         testing_env!(context.build());

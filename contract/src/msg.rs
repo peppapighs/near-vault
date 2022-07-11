@@ -1,14 +1,12 @@
-use near_sdk::serde::{Deserialize, Serialize};
+use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 
-#[derive(Deserialize, Serialize)]
-#[serde(crate = "near_sdk::serde")]
+#[derive(BorshDeserialize, BorshSerialize)]
 pub struct TransferMessage {
     pub action: String,
-    pub payload: String,
+    pub payload: Vec<u8>,
 }
 
-#[derive(Deserialize, Serialize)]
-#[serde(crate = "near_sdk::serde")]
+#[derive(BorshDeserialize, BorshSerialize)]
 pub struct DepositPayload {
     pub account_name: String,
 }
