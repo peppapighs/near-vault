@@ -5,7 +5,7 @@ use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::json_types::U128;
 use near_sdk::{
-    env, log, near_bindgen, require, AccountId, Balance, PanicOnDefault, Promise, StorageUsage,
+    env, near_bindgen, require, AccountId, Balance, PanicOnDefault, Promise, StorageUsage,
 };
 
 pub mod msg;
