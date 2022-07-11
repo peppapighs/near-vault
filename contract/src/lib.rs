@@ -1,14 +1,16 @@
 use msg::FeeMessage;
 use near_contract_standards::fungible_token::core::ext_ft_core;
+use near_contract_standards::storage_management::StorageBalance;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::json_types::U128;
 use near_sdk::{
-    env, near_bindgen, require, AccountId, Balance, PanicOnDefault, Promise, StorageUsage,
+    env, log, near_bindgen, require, AccountId, Balance, PanicOnDefault, Promise, StorageUsage,
 };
 
 pub mod msg;
 pub mod receiver;
+pub mod storage;
 mod test;
 
 const ACCOUNT_NAME_MAX_LENGTH: usize = 256;
@@ -33,11 +35,10 @@ pub struct Contract {
     // User's Account ID -> List of account names
     pub user_accounts: LookupMap<AccountId, Vec<String>>,
 
-    // Storage usage for new user
+    // Storage staking mechanism
     pub user_storage_usage: StorageUsage,
-
-    // Storage usage for new account
     pub account_storage_usage: StorageUsage,
+    pub storage_balances: LookupMap<AccountId, StorageBalance>,
 }
 
 #[near_bindgen]
@@ -61,6 +62,7 @@ impl Contract {
             user_accounts: LookupMap::new(b"u".to_vec()),
             user_storage_usage: 0,
             account_storage_usage: 0,
+            storage_balances: LookupMap::new(b"s".to_vec()),
         };
         this.measure_account_storage_usage();
         this
@@ -68,6 +70,11 @@ impl Contract {
 
     // Create new account with unique account name
     pub fn create_account(&mut self, account_name: String) {
+        require!(
+            self.user_accounts.contains_key(&env::signer_account_id()),
+            format!("The user {} is not registered", env::signer_account_id())
+        );
+
         // Account name must not be longer than ACCOUNT_NAME_MAX_LENGTH
         require!(
             account_name.len() <= ACCOUNT_NAME_MAX_LENGTH,
@@ -80,27 +87,16 @@ impl Contract {
             "Account already exists"
         );
 
-        // Create new empty account
-        self.accounts.insert(
-            &account_name,
-            &(Account {
-                owner_id: env::signer_account_id().clone(),
-                balance: 0,
-            }),
-        );
-
-        // Add account to user's list of accounts
-        let mut user_account = self
-            .user_accounts
-            .get(&env::signer_account_id())
-            .unwrap_or(vec![]);
-        user_account.push(account_name.clone());
-        self.user_accounts
-            .insert(&env::signer_account_id(), &user_account);
+        self.internal_create_account(env::signer_account_id(), account_name);
     }
 
     // Withdraw tokens from account
     pub fn withdraw(&mut self, account_name: String, amount: U128) -> Promise {
+        require!(
+            self.user_accounts.contains_key(&env::signer_account_id()),
+            format!("The user {} is not registered", env::signer_account_id())
+        );
+
         // Get account by account name
         let mut account = self
             .accounts
@@ -125,12 +121,18 @@ impl Contract {
     }
 
     // Transfer tokens to another account
+    #[payable]
     pub fn transfer(
         &mut self,
         sender_account_name: String,
         receiver_account_name: String,
         amount: U128,
     ) {
+        require!(
+            self.user_accounts.contains_key(&env::signer_account_id()),
+            format!("The user {} is not registered", env::signer_account_id())
+        );
+
         // Get sender account by account name
         let mut sender_account = self
             .accounts
@@ -196,7 +198,10 @@ impl Contract {
         // Transfer fees to owner
         ext_ft_core::ext(self.token_id.clone()).ft_transfer(self.owner_id.clone(), amount, None)
     }
+}
 
+#[near_bindgen]
+impl Contract {
     // Get contract fee
     pub fn get_fees(&self) -> FeeMessage {
         FeeMessage {
@@ -224,6 +229,13 @@ impl Contract {
 
         // Calculate storage usage for new user
         self.user_accounts.insert(&tmp_account_id, &vec![]);
+        self.storage_balances.insert(
+            &tmp_account_id,
+            &StorageBalance {
+                total: 0.into(),
+                available: 0.into(),
+            },
+        );
         self.user_storage_usage = env::storage_usage() - initial_storage_usage;
 
         // Calculate storage usage for new account
@@ -242,10 +254,18 @@ impl Contract {
         // Clean up
         self.accounts.remove(&tmp_account_name);
         self.user_accounts.remove(&tmp_account_id);
+        self.storage_balances.remove(&tmp_account_id);
+
+        log!(
+            "Storage usage => new user: {} bytes, new account: {} bytes, cost per byte: {}",
+            self.user_storage_usage,
+            self.account_storage_usage,
+            env::storage_byte_cost()
+        );
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
+#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault, PartialEq, Debug)]
 pub struct Account {
     pub owner_id: AccountId,
     pub balance: Balance,

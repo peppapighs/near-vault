@@ -2,8 +2,9 @@
 pub mod tests {
     use crate::{Account, Contract, FeeMessage};
     use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
+    use near_contract_standards::storage_management::StorageManagement;
     use near_sdk::test_utils::{accounts, VMContextBuilder};
-    use near_sdk::{testing_env, AccountId};
+    use near_sdk::{env, testing_env, AccountId, Balance};
 
     fn get_context(predecessor_account_id: AccountId) -> VMContextBuilder {
         let mut builder = VMContextBuilder::new();
@@ -12,6 +13,29 @@ pub mod tests {
             .signer_account_id(predecessor_account_id.clone())
             .predecessor_account_id(predecessor_account_id);
         builder
+    }
+
+    fn register_user(contract: &mut Contract, account_id: &AccountId) {
+        let mut context = get_context(account_id.clone());
+        testing_env!(context
+            .storage_usage(env::storage_usage())
+            .attached_deposit(Balance::from(contract.user_storage_usage) * env::storage_byte_cost())
+            .predecessor_account_id(account_id.clone())
+            .build());
+        contract.storage_deposit(Some(account_id.clone()), Some(true));
+    }
+
+    fn create_account(contract: &mut Contract, account_id: &AccountId, account_name: &str) {
+        let mut context = get_context(account_id.clone());
+        testing_env!(context
+            .storage_usage(env::storage_usage())
+            .attached_deposit(
+                Balance::from(contract.account_storage_usage) * env::storage_byte_cost()
+            )
+            .predecessor_account_id(account_id.clone())
+            .build());
+        contract.storage_deposit(Some(account_id.clone()), None);
+        contract.create_account(account_name.to_owned());
     }
 
     #[test]
@@ -31,11 +55,14 @@ pub mod tests {
 
     #[test]
     fn test_create_account() {
-        let context = get_context(accounts(1));
+        let mut context = get_context(accounts(1));
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
-        contract.create_account("account".into());
+        register_user(&mut contract, &accounts(1));
+        create_account(&mut contract, &accounts(1), "account");
+
+        testing_env!(context.is_view(true).build());
         let account = contract.accounts.get(&"account".to_owned()).unwrap();
         assert_eq!(account.owner_id, accounts(1));
         assert_eq!(account.balance, 0);
@@ -60,8 +87,20 @@ pub mod tests {
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
-        contract.create_account("account".into());
-        contract.create_account("account".into());
+        register_user(&mut contract, &accounts(1));
+        create_account(&mut contract, &accounts(1), "account");
+        create_account(&mut contract, &accounts(1), "account");
+    }
+
+    #[test]
+    #[should_panic(expected = "Insufficient deposit to create an account")]
+    fn test_create_account_insufficient_deposit() {
+        let context = get_context(accounts(1));
+        testing_env!(context.build());
+        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
+
+        register_user(&mut contract, &accounts(1));
+        contract.create_account("account".to_owned());
     }
 
     #[test]
@@ -73,10 +112,11 @@ pub mod tests {
     #[test]
     #[should_panic(expected = "Account does not exist")]
     fn test_get_balance_non_existent_account() {
-        let context = get_context(accounts(1));
+        let mut context = get_context(accounts(1));
         testing_env!(context.build());
         let contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
+        testing_env!(context.is_view(true).build());
         contract.get_balance("account".into());
     }
 
@@ -86,7 +126,9 @@ pub mod tests {
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
-        contract.create_account("account".into());
+        register_user(&mut contract, &accounts(1));
+        create_account(&mut contract, &accounts(1), "account");
+
         let context = get_context(accounts(2));
         testing_env!(context.build());
         contract.ft_on_transfer(
@@ -158,7 +200,9 @@ pub mod tests {
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
-        contract.create_account("account".into());
+        register_user(&mut contract, &accounts(1));
+        create_account(&mut contract, &accounts(1), "account");
+
         let context = get_context(accounts(2));
         testing_env!(context.build());
         contract.ft_on_transfer(
@@ -182,7 +226,10 @@ pub mod tests {
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
-        contract.create_account("account".into());
+        register_user(&mut contract, &accounts(1));
+        register_user(&mut contract, &accounts(3));
+        create_account(&mut contract, &accounts(1), "account");
+
         let context = get_context(accounts(2));
         testing_env!(context.build());
         contract.ft_on_transfer(
@@ -204,7 +251,9 @@ pub mod tests {
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
-        contract.create_account("account".into());
+        register_user(&mut contract, &accounts(1));
+        create_account(&mut contract, &accounts(1), "account");
+
         let context = get_context(accounts(2));
         testing_env!(context.build());
         contract.ft_on_transfer(
@@ -225,8 +274,10 @@ pub mod tests {
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
-        contract.create_account("account_1".into());
-        contract.create_account("account_2".into());
+        register_user(&mut contract, &accounts(1));
+        create_account(&mut contract, &accounts(1), "account_1");
+        create_account(&mut contract, &accounts(1), "account_2");
+
         let context = get_context(accounts(2));
         testing_env!(context.build());
         contract.ft_on_transfer(
@@ -255,10 +306,11 @@ pub mod tests {
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
-        contract.create_account("account_1".into());
-        let context = get_context(accounts(3));
-        testing_env!(context.build());
-        contract.create_account("account_2".into());
+        register_user(&mut contract, &accounts(1));
+        register_user(&mut contract, &accounts(3));
+        create_account(&mut contract, &accounts(1), "account_1");
+        create_account(&mut contract, &accounts(3), "account_2");
+
         let context = get_context(accounts(2));
         testing_env!(context.build());
         contract.ft_on_transfer(
@@ -289,6 +341,8 @@ pub mod tests {
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
+        register_user(&mut contract, &accounts(1));
+
         contract.transfer("account_1".into(), "account_2".into(), 1.into());
     }
 
@@ -299,7 +353,9 @@ pub mod tests {
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
-        contract.create_account("account_1".into());
+        register_user(&mut contract, &accounts(1));
+        create_account(&mut contract, &accounts(1), "account_1");
+
         contract.transfer("account_1".into(), "account_2".into(), 1.into());
     }
 
@@ -310,8 +366,10 @@ pub mod tests {
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
-        contract.create_account("account_1".into());
-        contract.create_account("account_2".into());
+        register_user(&mut contract, &accounts(1));
+        create_account(&mut contract, &accounts(1), "account_1");
+        create_account(&mut contract, &accounts(1), "account_2");
+
         let context = get_context(accounts(2));
         testing_env!(context.build());
         contract.ft_on_transfer(
@@ -338,10 +396,11 @@ pub mod tests {
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
-        contract.create_account("account_1".into());
-        let context = get_context(accounts(3));
-        testing_env!(context.build());
-        contract.create_account("account_2".into());
+        register_user(&mut contract, &accounts(1));
+        register_user(&mut contract, &accounts(3));
+        create_account(&mut contract, &accounts(1), "account_1");
+        create_account(&mut contract, &accounts(3), "account_2");
+
         let context = get_context(accounts(2));
         testing_env!(context.build());
         contract.ft_on_transfer(
