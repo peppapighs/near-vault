@@ -196,9 +196,9 @@ impl Contract {
             .insert(&receiver_account_name, &receiver_account);
     }
 
-    // Transfer all fees to owner
+    // Withdraw all fees to contract owner
     #[payable]
-    pub fn transfer_fee_to_owner(&mut self, amount: U128) -> Option<Promise> {
+    pub fn withdraw_transfer_fee(&mut self, amount: U128) -> Option<Promise> {
         assert_one_yocto();
         require!(
             env::signer_account_id() == self.metadata.owner_id,

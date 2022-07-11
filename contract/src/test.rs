@@ -472,7 +472,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_transfer_fee_to_owner() {
+    fn test_withdraw_transfer_fee() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
@@ -516,30 +516,30 @@ pub mod tests {
         contract.transfer("account_1".into(), "account_2".into(), 100.into());
 
         testing_env!(context.attached_deposit(1).build());
-        contract.transfer_fee_to_owner(1.into());
+        contract.withdraw_transfer_fee(1.into());
         assert_eq!(contract.total_transfer_fee, 0);
     }
 
     #[test]
     #[should_panic(expected = "Unauthorized access")]
-    fn test_transfer_fee_to_owner_unauthorized_access() {
+    fn test_withdraw_transfer_fee_unauthorized_access() {
         let context = get_context(accounts(1));
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         let mut context = get_context(accounts(2));
         testing_env!(context.attached_deposit(1).build());
-        contract.transfer_fee_to_owner(1.into());
+        contract.withdraw_transfer_fee(1.into());
     }
 
     #[test]
     #[should_panic(expected = "Balance overflow")]
-    fn test_transfer_fee_to_owner_not_enough_token() {
+    fn test_withdraw_transfer_fee_not_enough_token() {
         let mut context = get_context(accounts(1));
         testing_env!(context.build());
         let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
 
         testing_env!(context.attached_deposit(1).build());
-        contract.transfer_fee_to_owner(1.into());
+        contract.withdraw_transfer_fee(1.into());
     }
 }
