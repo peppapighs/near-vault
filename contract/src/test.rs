@@ -34,7 +34,6 @@ pub mod tests {
             )
             .predecessor_account_id(account_id.clone())
             .build());
-        contract.storage_deposit(Some(account_id.clone()), None);
         contract.create_account(account_name.to_owned());
     }
 

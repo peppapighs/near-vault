@@ -1,5 +1,5 @@
 use near_contract_standards::fungible_token::core::ext_ft_core;
-use near_contract_standards::storage_management::StorageBalance;
+use near_contract_standards::storage_management::{StorageBalance, StorageManagement};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::json_types::U128;
@@ -67,6 +67,7 @@ impl Contract {
     }
 
     // Create new account with unique account name
+    #[payable]
     pub fn create_account(&mut self, account_name: String) {
         require!(
             self.user_accounts.contains_key(&env::signer_account_id()),
@@ -85,6 +86,10 @@ impl Contract {
             "Account already exists"
         );
 
+        // User may attach deposit to create new account
+        self.storage_deposit(Some(env::signer_account_id()), None);
+
+        // Create new account
         self.internal_create_account(env::signer_account_id(), account_name);
     }
 
