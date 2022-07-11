@@ -16,7 +16,7 @@ impl FungibleTokenReceiver for Contract {
     ) -> PromiseOrValue<U128> {
         // Contract caller must be the specified token
         require!(
-            env::predecessor_account_id() == self.token_id,
+            env::predecessor_account_id() == self.metadata.token_id,
             "Unsupported token type"
         );
 

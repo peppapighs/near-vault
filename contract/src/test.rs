@@ -1,6 +1,6 @@
 #[cfg(test)]
 pub mod tests {
-    use crate::{Account, Contract, FeeMessage};
+    use crate::{Account, Contract, ContractMetadata};
     use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
     use near_contract_standards::storage_management::StorageManagement;
     use near_sdk::test_utils::{accounts, VMContextBuilder};
@@ -72,8 +72,10 @@ pub mod tests {
             vec!["account"]
         );
         assert_eq!(
-            contract.get_fees(),
-            FeeMessage {
+            contract.get_metadata(),
+            ContractMetadata {
+                owner_id: accounts(1),
+                token_id: accounts(2),
                 transfer_fee_numerator: 1,
                 transfer_fee_denominator: 100,
             }

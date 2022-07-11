@@ -1,9 +1,9 @@
-use msg::FeeMessage;
 use near_contract_standards::fungible_token::core::ext_ft_core;
 use near_contract_standards::storage_management::StorageBalance;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::json_types::U128;
+use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
     assert_one_yocto, env, near_bindgen, require, AccountId, Balance, PanicOnDefault, Promise,
     StorageUsage,
@@ -19,15 +19,10 @@ const ACCOUNT_NAME_MAX_LENGTH: usize = 256;
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {
-    // Contract Owner's Account ID
-    pub owner_id: AccountId,
+    // Contract metadata
+    pub metadata: ContractMetadata,
 
-    // NEP-141 Token Account ID
-    pub token_id: AccountId,
-
-    // Transfer fee for cross-owner transfer
-    pub transfer_fee_numerator: u128,
-    pub transfer_fee_denominator: u128,
+    // Total transfer fee from cross-owner transfers
     pub total_transfer_fee: Balance,
 
     // Account account_name -> Account
@@ -54,10 +49,12 @@ impl Contract {
     ) -> Self {
         require!(!env::state_exists(), "Already initialized");
         let mut this = Self {
-            owner_id,
-            token_id,
-            transfer_fee_numerator,
-            transfer_fee_denominator,
+            metadata: ContractMetadata {
+                owner_id,
+                token_id,
+                transfer_fee_numerator,
+                transfer_fee_denominator,
+            },
             total_transfer_fee: 0,
             accounts: LookupMap::new(b"a".to_vec()),
             user_accounts: LookupMap::new(b"u".to_vec()),
@@ -123,7 +120,7 @@ impl Contract {
         if env::current_account_id() != env::signer_account_id() {
             // Call token contract to transfer token to caller
             Some(
-                ext_ft_core::ext(self.token_id.clone())
+                ext_ft_core::ext(self.metadata.token_id.clone())
                     .with_attached_deposit(1)
                     .ft_transfer(env::signer_account_id(), amount, None),
             )
@@ -173,9 +170,9 @@ impl Contract {
         // If accounts have different owners, subtract transfer fee from receiver
         if receiver_account.owner_id != env::signer_account_id() {
             let transfer_fee = Balance::from(amount)
-                .checked_mul(self.transfer_fee_numerator)
+                .checked_mul(self.metadata.transfer_fee_numerator)
                 .unwrap_or(0)
-                .checked_div(self.transfer_fee_denominator)
+                .checked_div(self.metadata.transfer_fee_denominator)
                 .unwrap_or(0);
             receiver_account.balance = receiver_account
                 .balance
@@ -199,11 +196,11 @@ impl Contract {
     pub fn transfer_fee_to_owner(&mut self, amount: U128) -> Option<Promise> {
         assert_one_yocto();
         require!(
-            env::signer_account_id() == self.owner_id,
+            env::signer_account_id() == self.metadata.owner_id,
             "Unauthorized access"
         );
         require!(
-            env::current_account_id() != self.owner_id,
+            env::current_account_id() != self.metadata.owner_id,
             "Contract cannot withdraw from itself"
         );
 
@@ -216,9 +213,9 @@ impl Contract {
         if env::current_account_id() != env::signer_account_id() {
             // Transfer fees to owner
             Some(
-                ext_ft_core::ext(self.token_id.clone())
+                ext_ft_core::ext(self.metadata.token_id.clone())
                     .with_attached_deposit(1)
-                    .ft_transfer(self.owner_id.clone(), amount, None),
+                    .ft_transfer(self.metadata.owner_id.clone(), amount, None),
             )
         } else {
             None
@@ -228,12 +225,9 @@ impl Contract {
 
 #[near_bindgen]
 impl Contract {
-    // Get contract fee
-    pub fn get_fees(&self) -> FeeMessage {
-        FeeMessage {
-            transfer_fee_numerator: self.transfer_fee_numerator,
-            transfer_fee_denominator: self.transfer_fee_denominator,
-        }
+    // Get contract metadata
+    pub fn get_metadata(&self) -> ContractMetadata {
+        self.metadata.clone()
     }
 
     // Get balance of an account
@@ -288,4 +282,27 @@ impl Contract {
 pub struct Account {
     pub owner_id: AccountId,
     pub balance: Balance,
+}
+
+#[derive(
+    BorshDeserialize,
+    BorshSerialize,
+    Serialize,
+    Deserialize,
+    Clone,
+    PanicOnDefault,
+    PartialEq,
+    Debug,
+)]
+#[serde(crate = "near_sdk::serde")]
+pub struct ContractMetadata {
+    // Contract Owner's Account ID
+    pub owner_id: AccountId,
+
+    // NEP-141 Token Account ID
+    pub token_id: AccountId,
+
+    // Transfer fee for cross-owner transfer
+    pub transfer_fee_numerator: u128,
+    pub transfer_fee_denominator: u128,
 }
