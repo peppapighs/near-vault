@@ -4,22 +4,25 @@ import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { MenuIcon, XIcon, UserIcon } from '@heroicons/react/outline'
 import { useRouter } from 'next/router'
 
+import { useApp } from 'components/AppContext'
 import { classNames } from 'utils/classNames'
-import { useNearAPI } from 'utils/useNearAPI'
-
 
 const Navbar = () => {
   const router = useRouter()
 
-  const { wallet, loading } = useNearAPI()
+  const { wallet, loading } = useApp()
 
   const handleSignIn = () => {
-    wallet?.requestSignIn()
+    if (wallet) {
+      wallet.requestSignIn()
+    }
   }
 
   const handleSignOut = () => {
-    wallet?.signOut()
-    router.push('/')
+    if (wallet) {
+      wallet.signOut()
+      router.push('/')
+    }
   }
 
   return (
