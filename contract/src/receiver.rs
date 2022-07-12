@@ -3,7 +3,7 @@ use crate::{Contract, ContractExt};
 use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
 use near_sdk::borsh::BorshDeserialize;
 use near_sdk::json_types::U128;
-use near_sdk::{base64, env, near_bindgen, require, AccountId, PromiseOrValue};
+use near_sdk::{bs58, env, near_bindgen, require, AccountId, PromiseOrValue};
 
 #[near_bindgen]
 impl FungibleTokenReceiver for Contract {
@@ -22,8 +22,9 @@ impl FungibleTokenReceiver for Contract {
         );
 
         // Parse JSON message into TransferMessage and match each action
-        let decoded_message =
-            base64::decode(&msg).unwrap_or_else(|_| panic!("Invalid transfer message format"));
+        let decoded_message = bs58::decode(&msg)
+            .into_vec()
+            .unwrap_or_else(|_| panic!("Invalid transfer message format"));
         let message = TransferMessage::try_from_slice(&decoded_message[..])
             .unwrap_or_else(|_| panic!("Invalid transfer message format"));
         match message.action.as_str() {
