@@ -21,7 +21,9 @@ pub mod tests {
         let mut context = get_context(account_id.clone());
         testing_env!(context
             .storage_usage(env::storage_usage())
-            .attached_deposit(Balance::from(contract.user_storage_usage) * env::storage_byte_cost())
+            .attached_deposit(
+                Balance::from(contract.metadata.user_storage_usage) * env::storage_byte_cost()
+            )
             .predecessor_account_id(account_id.clone())
             .build());
         contract.storage_deposit(Some(account_id.clone()), Some(true));
@@ -32,7 +34,7 @@ pub mod tests {
         testing_env!(context
             .storage_usage(env::storage_usage())
             .attached_deposit(
-                Balance::from(contract.account_storage_usage) * env::storage_byte_cost()
+                Balance::from(contract.metadata.account_storage_usage) * env::storage_byte_cost()
             )
             .predecessor_account_id(account_id.clone())
             .build());
@@ -79,6 +81,8 @@ pub mod tests {
                 token_id: accounts(2),
                 transfer_fee_numerator: 1,
                 transfer_fee_denominator: 100,
+                user_storage_usage: contract.metadata.user_storage_usage,
+                account_storage_usage: contract.metadata.account_storage_usage
             }
         );
     }

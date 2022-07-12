@@ -161,7 +161,7 @@ impl StorageManagement for Contract {
 
     fn storage_balance_bounds(&self) -> StorageBalanceBounds {
         let required_storage_balance =
-            Balance::from(self.user_storage_usage) * env::storage_byte_cost();
+            Balance::from(self.metadata.user_storage_usage) * env::storage_byte_cost();
         StorageBalanceBounds {
             min: required_storage_balance.into(),
             max: None,
@@ -180,7 +180,7 @@ impl Contract {
             .storage_balances
             .get(&owner_id)
             .unwrap_or_else(|| panic!("The user {} is not registered", owner_id));
-        let amount = Balance::from(self.account_storage_usage) * env::storage_byte_cost();
+        let amount = Balance::from(self.metadata.account_storage_usage) * env::storage_byte_cost();
 
         require!(
             storage_balance.available.0 >= amount,
@@ -237,7 +237,9 @@ mod test {
 
         testing_env!(context
             .storage_usage(env::storage_usage())
-            .attached_deposit(Balance::from(contract.user_storage_usage) * env::storage_byte_cost())
+            .attached_deposit(
+                Balance::from(contract.metadata.user_storage_usage) * env::storage_byte_cost()
+            )
             .predecessor_account_id(accounts(1))
             .build());
         contract.storage_deposit(None, Some(true));
@@ -252,7 +254,7 @@ mod test {
         let storage_balance = contract.storage_balance_of(accounts(1)).unwrap();
         assert_eq!(
             Balance::from(storage_balance.total),
-            Balance::from(contract.user_storage_usage) * env::storage_byte_cost() + 1
+            Balance::from(contract.metadata.user_storage_usage) * env::storage_byte_cost() + 1
         );
         assert_eq!(Balance::from(storage_balance.available), 1)
     }
@@ -280,7 +282,9 @@ mod test {
 
         testing_env!(context
             .storage_usage(env::storage_usage())
-            .attached_deposit(Balance::from(contract.user_storage_usage) * env::storage_byte_cost())
+            .attached_deposit(
+                Balance::from(contract.metadata.user_storage_usage) * env::storage_byte_cost()
+            )
             .predecessor_account_id(accounts(1))
             .build());
         contract.storage_deposit(None, Some(true));
@@ -310,7 +314,9 @@ mod test {
 
         testing_env!(context
             .storage_usage(env::storage_usage())
-            .attached_deposit(Balance::from(contract.user_storage_usage) * env::storage_byte_cost())
+            .attached_deposit(
+                Balance::from(contract.metadata.user_storage_usage) * env::storage_byte_cost()
+            )
             .predecessor_account_id(accounts(1))
             .build());
         contract.storage_deposit(None, Some(true));
@@ -339,7 +345,9 @@ mod test {
 
         testing_env!(context
             .storage_usage(env::storage_usage())
-            .attached_deposit(Balance::from(contract.user_storage_usage) * env::storage_byte_cost())
+            .attached_deposit(
+                Balance::from(contract.metadata.user_storage_usage) * env::storage_byte_cost()
+            )
             .predecessor_account_id(tmp_account_id.clone())
             .build());
         contract.storage_deposit(None, None);
@@ -378,8 +386,9 @@ mod test {
         testing_env!(context
             .storage_usage(env::storage_usage())
             .attached_deposit(
-                Balance::from(contract.user_storage_usage + contract.account_storage_usage)
-                    * env::storage_byte_cost()
+                Balance::from(
+                    contract.metadata.user_storage_usage + contract.metadata.account_storage_usage
+                ) * env::storage_byte_cost()
             )
             .predecessor_account_id(tmp_account_id.clone())
             .build());
@@ -426,7 +435,7 @@ mod test {
         let storage_balance_bounds = contract.storage_balance_bounds();
         assert_eq!(
             storage_balance_bounds.min.0,
-            Balance::from(contract.user_storage_usage) * env::storage_byte_cost()
+            Balance::from(contract.metadata.user_storage_usage) * env::storage_byte_cost()
         );
         assert_eq!(storage_balance_bounds.max.is_none(), true);
     }

@@ -31,9 +31,7 @@ pub struct Contract {
     // User's Account ID -> List of account names
     pub user_accounts: LookupMap<AccountId, Vec<String>>,
 
-    // Storage staking mechanism
-    pub user_storage_usage: StorageUsage,
-    pub account_storage_usage: StorageUsage,
+    // Storage staking balance
     pub storage_balances: LookupMap<AccountId, StorageBalance>,
 }
 
@@ -54,12 +52,12 @@ impl Contract {
                 token_id,
                 transfer_fee_numerator,
                 transfer_fee_denominator,
+                user_storage_usage: 0,
+                account_storage_usage: 0,
             },
             total_transfer_fee: 0,
             accounts: LookupMap::new(b"a".to_vec()),
             user_accounts: LookupMap::new(b"u".to_vec()),
-            user_storage_usage: 0,
-            account_storage_usage: 0,
             storage_balances: LookupMap::new(b"s".to_vec()),
         };
         this.measure_account_storage_usage();
@@ -261,7 +259,7 @@ impl Contract {
                 available: 0.into(),
             },
         );
-        self.user_storage_usage = env::storage_usage() - initial_storage_usage;
+        self.metadata.user_storage_usage = env::storage_usage() - initial_storage_usage;
 
         // Calculate storage usage for new account
         let initial_storage_usage = env::storage_usage();
@@ -274,7 +272,7 @@ impl Contract {
         );
         self.user_accounts
             .insert(&tmp_account_id, &vec![tmp_account_name.clone()]);
-        self.account_storage_usage = env::storage_usage() - initial_storage_usage;
+        self.metadata.account_storage_usage = env::storage_usage() - initial_storage_usage;
 
         // Clean up
         self.accounts.remove(&tmp_account_name);
@@ -310,4 +308,8 @@ pub struct ContractMetadata {
     // Transfer fee for cross-owner transfer
     pub transfer_fee_numerator: u128,
     pub transfer_fee_denominator: u128,
+
+    // Storage usage
+    pub user_storage_usage: StorageUsage,
+    pub account_storage_usage: StorageUsage,
 }
