@@ -122,7 +122,7 @@ const Navbar = () => {
             </div>
           </div>
 
-          <Disclosure.Panel className="neumorphic-pressed sm:hidden">
+          <Disclosure.Panel className="neumorphic-pressed border-b border-gray-400 sm:hidden">
             {!loading && wallet && wallet.isSignedIn() ? (
               <React.Fragment>
                 <div className="pt-4 pb-3">
