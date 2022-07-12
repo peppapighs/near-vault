@@ -174,12 +174,12 @@ impl StorageManagement for Contract {
 }
 
 impl Contract {
-    pub fn internal_create_account(&mut self, owner_id: AccountId, account_name: String) {
+    pub fn internal_create_account(&mut self, account_id: AccountId, account_name: String) {
         // Retrieve storage balance of the account owner
         let mut storage_balance = self
             .storage_balances
-            .get(&owner_id)
-            .unwrap_or_else(|| panic!("The user {} is not registered", owner_id));
+            .get(&account_id)
+            .unwrap_or_else(|| panic!("The user {} is not registered", account_id));
         let amount = Balance::from(self.metadata.account_storage_usage) * env::storage_byte_cost();
 
         require!(
@@ -192,21 +192,21 @@ impl Contract {
             .checked_sub(amount)
             .unwrap_or_else(|| panic!("Balance overflow"))
             .into();
-        self.storage_balances.insert(&owner_id, &storage_balance);
+        self.storage_balances.insert(&account_id, &storage_balance);
 
         // Create new empty account
         self.accounts.insert(
             &account_name,
             &(Account {
-                owner_id: owner_id.clone(),
+                owner_id: account_id.clone(),
                 balance: 0,
             }),
         );
 
         // Add account to user's list of accounts
-        let mut user_account = self.user_accounts.get(&owner_id).unwrap();
+        let mut user_account = self.user_accounts.get(&account_id).unwrap();
         user_account.push(account_name.clone());
-        self.user_accounts.insert(&owner_id, &user_account);
+        self.user_accounts.insert(&account_id, &user_account);
     }
 }
 

@@ -234,8 +234,8 @@ impl Contract {
     }
 
     // Get list of all accounts owned by a user
-    pub fn get_accounts(&self, owner_id: AccountId) -> Option<Vec<String>> {
-        self.user_accounts.get(&owner_id)
+    pub fn get_accounts(&self, account_id: AccountId) -> Option<Vec<String>> {
+        self.user_accounts.get(&account_id)
     }
 
     // Get balance of an account
