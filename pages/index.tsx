@@ -1,10 +1,12 @@
 import type { NextPage } from 'next'
 
+import Layout from 'components/Layout'
+
 const Home: NextPage = () => {
   return (
-    <div className="h-screen flex flex-col items-center justify-center">
-      Hello World
-    </div>
+    <Layout>
+      <div></div>
+    </Layout>
   )
 }
 
