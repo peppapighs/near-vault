@@ -2,11 +2,10 @@ use near_contract_standards::fungible_token::core::ext_ft_core;
 use near_contract_standards::storage_management::{StorageBalance, StorageManagement};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
-use near_sdk::json_types::U128;
+use near_sdk::json_types::{U128, U64};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
     assert_one_yocto, env, near_bindgen, require, AccountId, Balance, PanicOnDefault, Promise,
-    StorageUsage,
 };
 
 pub mod msg;
@@ -42,8 +41,8 @@ impl Contract {
     pub fn new(
         owner_id: AccountId,
         token_id: AccountId,
-        transfer_fee_numerator: u128,
-        transfer_fee_denominator: u128,
+        transfer_fee_numerator: U128,
+        transfer_fee_denominator: U128,
     ) -> Self {
         require!(!env::state_exists(), "Already initialized");
         let mut this = Self {
@@ -52,8 +51,8 @@ impl Contract {
                 token_id,
                 transfer_fee_numerator,
                 transfer_fee_denominator,
-                user_storage_usage: 0,
-                account_storage_usage: 0,
+                user_storage_usage: 0.into(),
+                account_storage_usage: 0.into(),
             },
             total_transfer_fee: 0,
             accounts: LookupMap::new(b"a".to_vec()),
@@ -173,9 +172,9 @@ impl Contract {
         // If accounts have different owners, subtract transfer fee from receiver
         if receiver_account.owner_id != env::signer_account_id() {
             let transfer_fee = Balance::from(amount)
-                .checked_mul(self.metadata.transfer_fee_numerator)
+                .checked_mul(self.metadata.transfer_fee_numerator.into())
                 .unwrap_or(0)
-                .checked_div(self.metadata.transfer_fee_denominator)
+                .checked_div(self.metadata.transfer_fee_denominator.into())
                 .unwrap_or(0);
             receiver_account.balance = receiver_account
                 .balance
@@ -264,7 +263,7 @@ impl Contract {
                 available: 0.into(),
             },
         );
-        self.metadata.user_storage_usage = env::storage_usage() - initial_storage_usage;
+        self.metadata.user_storage_usage = (env::storage_usage() - initial_storage_usage).into();
 
         // Calculate storage usage for new account
         let initial_storage_usage = env::storage_usage();
@@ -277,7 +276,7 @@ impl Contract {
         );
         self.user_accounts
             .insert(&tmp_account_id, &vec![tmp_account_name.clone()]);
-        self.metadata.account_storage_usage = env::storage_usage() - initial_storage_usage;
+        self.metadata.account_storage_usage = (env::storage_usage() - initial_storage_usage).into();
 
         // Clean up
         self.accounts.remove(&tmp_account_name);
@@ -311,10 +310,10 @@ pub struct ContractMetadata {
     pub token_id: AccountId,
 
     // Transfer fee for cross-owner transfer
-    pub transfer_fee_numerator: u128,
-    pub transfer_fee_denominator: u128,
+    pub transfer_fee_numerator: U128,
+    pub transfer_fee_denominator: U128,
 
     // Storage usage
-    pub user_storage_usage: StorageUsage,
-    pub account_storage_usage: StorageUsage,
+    pub user_storage_usage: U64,
+    pub account_storage_usage: U64,
 }

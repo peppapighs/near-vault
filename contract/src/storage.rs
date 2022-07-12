@@ -161,7 +161,7 @@ impl StorageManagement for Contract {
 
     fn storage_balance_bounds(&self) -> StorageBalanceBounds {
         let required_storage_balance =
-            Balance::from(self.metadata.user_storage_usage) * env::storage_byte_cost();
+            Balance::from(self.metadata.user_storage_usage.0) * env::storage_byte_cost();
         StorageBalanceBounds {
             min: required_storage_balance.into(),
             max: None,
@@ -180,7 +180,8 @@ impl Contract {
             .storage_balances
             .get(&account_id)
             .unwrap_or_else(|| panic!("The user {} is not registered", account_id));
-        let amount = Balance::from(self.metadata.account_storage_usage) * env::storage_byte_cost();
+        let amount =
+            Balance::from(self.metadata.account_storage_usage.0) * env::storage_byte_cost();
 
         require!(
             storage_balance.available.0 >= amount,
@@ -233,12 +234,12 @@ mod test {
     fn test_storage_deposit() {
         let mut context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1.into(), 100.into());
 
         testing_env!(context
             .storage_usage(env::storage_usage())
             .attached_deposit(
-                Balance::from(contract.metadata.user_storage_usage) * env::storage_byte_cost()
+                Balance::from(contract.metadata.user_storage_usage.0) * env::storage_byte_cost()
             )
             .predecessor_account_id(accounts(1))
             .build());
@@ -254,7 +255,7 @@ mod test {
         let storage_balance = contract.storage_balance_of(accounts(1)).unwrap();
         assert_eq!(
             Balance::from(storage_balance.total),
-            Balance::from(contract.metadata.user_storage_usage) * env::storage_byte_cost() + 1
+            Balance::from(contract.metadata.user_storage_usage.0) * env::storage_byte_cost() + 1
         );
         assert_eq!(Balance::from(storage_balance.available), 1)
     }
@@ -264,7 +265,7 @@ mod test {
     fn test_storage_deposit_insufficient_deposit() {
         let mut context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1.into(), 100.into());
 
         testing_env!(context
             .storage_usage(env::storage_usage())
@@ -278,12 +279,12 @@ mod test {
     fn test_storage_withdraw() {
         let mut context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1.into(), 100.into());
 
         testing_env!(context
             .storage_usage(env::storage_usage())
             .attached_deposit(
-                Balance::from(contract.metadata.user_storage_usage) * env::storage_byte_cost()
+                Balance::from(contract.metadata.user_storage_usage.0) * env::storage_byte_cost()
             )
             .predecessor_account_id(accounts(1))
             .build());
@@ -310,12 +311,12 @@ mod test {
     fn test_storage_withdraw_not_enough_available_token() {
         let mut context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1.into(), 100.into());
 
         testing_env!(context
             .storage_usage(env::storage_usage())
             .attached_deposit(
-                Balance::from(contract.metadata.user_storage_usage) * env::storage_byte_cost()
+                Balance::from(contract.metadata.user_storage_usage.0) * env::storage_byte_cost()
             )
             .predecessor_account_id(accounts(1))
             .build());
@@ -340,13 +341,13 @@ mod test {
     fn test_storage_unregister() {
         let mut context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1.into(), 100.into());
         let tmp_account_id = AccountId::new_unchecked("a".repeat(64));
 
         testing_env!(context
             .storage_usage(env::storage_usage())
             .attached_deposit(
-                Balance::from(contract.metadata.user_storage_usage) * env::storage_byte_cost()
+                Balance::from(contract.metadata.user_storage_usage.0) * env::storage_byte_cost()
             )
             .predecessor_account_id(tmp_account_id.clone())
             .build());
@@ -379,7 +380,7 @@ mod test {
     fn test_storage_unregister_user_with_accounts() {
         let mut context = get_context(accounts(1));
         testing_env!(context.build());
-        let mut contract = Contract::new(accounts(1), accounts(2), 1, 100);
+        let mut contract = Contract::new(accounts(1), accounts(2), 1.into(), 100.into());
         let tmp_account_id = AccountId::new_unchecked("a".repeat(64));
         let account_name = "b".repeat(ACCOUNT_NAME_MAX_LENGTH);
 
@@ -387,7 +388,8 @@ mod test {
             .storage_usage(env::storage_usage())
             .attached_deposit(
                 Balance::from(
-                    contract.metadata.user_storage_usage + contract.metadata.account_storage_usage
+                    contract.metadata.user_storage_usage.0
+                        + contract.metadata.account_storage_usage.0
                 ) * env::storage_byte_cost()
             )
             .predecessor_account_id(tmp_account_id.clone())
@@ -429,13 +431,13 @@ mod test {
     fn test_storage_balance_bounds() {
         let mut context = get_context(accounts(1));
         testing_env!(context.build());
-        let contract = Contract::new(accounts(1), accounts(2), 1, 100);
+        let contract = Contract::new(accounts(1), accounts(2), 1.into(), 100.into());
 
         testing_env!(context.is_view(true).build());
         let storage_balance_bounds = contract.storage_balance_bounds();
         assert_eq!(
             storage_balance_bounds.min.0,
-            Balance::from(contract.metadata.user_storage_usage) * env::storage_byte_cost()
+            Balance::from(contract.metadata.user_storage_usage.0) * env::storage_byte_cost()
         );
         assert_eq!(storage_balance_bounds.max.is_none(), true);
     }
