@@ -71,7 +71,7 @@ pub mod tests {
         assert_eq!(account.balance, 0);
         assert_eq!(contract.get_balance("account".to_owned()), 0.into());
         assert_eq!(
-            contract.user_accounts.get(&accounts(1)).unwrap(),
+            contract.get_accounts(accounts(1).clone()).unwrap(),
             vec!["account"]
         );
         assert_eq!(

@@ -233,6 +233,11 @@ impl Contract {
         self.metadata.clone()
     }
 
+    // Get list of all accounts owned by a user
+    pub fn get_accounts(&self, owner_id: AccountId) -> Option<Vec<String>> {
+        self.user_accounts.get(&owner_id)
+    }
+
     // Get balance of an account
     pub fn get_balance(&self, account_name: String) -> U128 {
         // Get account by account account name
