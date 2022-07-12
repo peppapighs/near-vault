@@ -2,13 +2,13 @@ import '../styles/globals.css'
 
 import type { AppProps } from 'next/app'
 
-import AppContext from 'components/AppContext'
+import { AppProvider } from 'hooks/useApp'
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <AppContext>
+    <AppProvider>
       <Component {...pageProps} />
-    </AppContext>
+    </AppProvider>
   )
 }
 

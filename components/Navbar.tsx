@@ -4,13 +4,13 @@ import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { MenuIcon, XIcon, UserIcon } from '@heroicons/react/outline'
 import { useRouter } from 'next/router'
 
-import { useApp } from 'components/AppContext'
+import { useApp } from 'hooks/useApp'
 import { classNames } from 'utils/classNames'
 
 const Navbar = () => {
   const router = useRouter()
 
-  const { wallet, loading } = useApp()
+  const { loading, wallet } = useApp()
 
   const handleSignIn = () => {
     if (wallet) {
