@@ -13,16 +13,12 @@ const Navbar = () => {
   const { loading, wallet } = useApp()
 
   const handleSignIn = () => {
-    if (wallet) {
-      wallet.requestSignIn()
-    }
+    wallet.requestSignIn()
   }
 
   const handleSignOut = () => {
-    if (wallet) {
-      wallet.signOut()
-      router.push('/')
-    }
+    wallet.signOut()
+    router.push('/')
   }
 
   return (
@@ -45,13 +41,13 @@ const Navbar = () => {
                 </div>
 
                 <div className="hidden sm:block">
-                  {!loading && wallet && wallet.isSignedIn() ? (
+                  {!loading && wallet.isSignedIn() ? (
                     <Menu as="div" className="relative">
                       <Menu.Button
                         type="button"
                         className="inline-flex items-center px-4 py-2 border border-gray-400 text-sm font-medium rounded-md text-gray-700 neumorphic-flat-sm hover:neumorphic-pressed-sm focus:neumorphic-pressed-sm focus:outline-none"
                       >
-                        <p className="w-32 whitespace-nowrap text-ellipsis overflow-hidden">
+                        <p className="w-32 text-center whitespace-nowrap text-ellipsis overflow-hidden">
                           {wallet.getAccountId()}
                         </p>
                       </Menu.Button>
@@ -95,7 +91,9 @@ const Navbar = () => {
                         'inline-flex items-center px-4 py-2 border border-gray-400 text-sm font-medium rounded-md neumorphic-flat-sm focus:neumorphic-pressed-sm focus:outline-none'
                       )}
                     >
-                      Sign in
+                      <p className="w-16 text-center">
+                        {loading ? '...' : 'Sign in'}
+                      </p>
                     </button>
                   )}
                 </div>
@@ -123,7 +121,7 @@ const Navbar = () => {
           </div>
 
           <Disclosure.Panel className="neumorphic-pressed border-b border-gray-400 sm:hidden">
-            {!loading && wallet && wallet.isSignedIn() ? (
+            {!loading && wallet.isSignedIn() ? (
               <React.Fragment>
                 <div className="pt-4 pb-3">
                   <div className="flex items-center space-x-3 px-5">
