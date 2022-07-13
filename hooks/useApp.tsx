@@ -7,8 +7,11 @@ import {
   WalletConnection,
 } from 'near-api-js'
 
-import tokenContract from 'utils/tokenContract'
-import vaultContract, { StorageBalance } from 'utils/vaultContract'
+import tokenContract, { TokenContractMetadata } from 'utils/tokenContract'
+import vaultContract, {
+  StorageBalance,
+  VaultContractMetadata,
+} from 'utils/vaultContract'
 
 interface Account {
   accountName: string
@@ -23,23 +26,40 @@ interface UserData {
 
 export interface AppState {
   loading: boolean
-  wallet: WalletConnection | undefined
+  wallet: WalletConnection
+  vaultContractMetadata: VaultContractMetadata
+  tokenContractMetadata: TokenContractMetadata
   user: UserData
-}
-
-const initialUser: UserData = {
-  tokenBalance: '0',
-  storageBalance: {
-    total: '0',
-    available: '0',
-  },
-  accounts: [],
 }
 
 const initialState: AppState = {
   loading: true,
-  wallet: undefined,
-  user: initialUser,
+  wallet: {} as WalletConnection,
+  vaultContractMetadata: {
+    owner_id: '',
+    token_id: '',
+    transfer_fee_numerator: '0',
+    transfer_fee_denominator: '0',
+    user_storage_usage: '0',
+    account_storage_usage: '0',
+  },
+  tokenContractMetadata: {
+    spec: '',
+    name: '',
+    symbol: '',
+    icon: null,
+    reference: null,
+    reference_hash: null,
+    decimals: 0,
+  },
+  user: {
+    tokenBalance: '0',
+    storageBalance: {
+      total: '0',
+      available: '0',
+    },
+    accounts: [],
+  },
 }
 
 type AppAction =
@@ -122,7 +142,7 @@ export const AppProvider = (props: Props) => {
         storageBalance:
           (await vaultContract(wallet.account()).storage_balance_of({
             account_id: wallet.getAccountId(),
-          })) || initialUser.storageBalance,
+          })) || initialState.user.storageBalance,
         accounts: await Promise.all(
           accountNames.map(async (accountName) => {
             const balance = await vaultContract(wallet.account()).get_balance({
@@ -132,11 +152,21 @@ export const AppProvider = (props: Props) => {
           })
         ),
       }
+
+      const vaultContractMetadata = await vaultContract(
+        wallet.account()
+      ).get_metadata()
+      const tokenContractMetadata = await tokenContract(
+        wallet.account()
+      ).ft_metadata()
+
       dispatch({
         type: 'SET_APP_STATE',
         payload: {
           loading: false,
           wallet,
+          vaultContractMetadata,
+          tokenContractMetadata,
           user,
         },
       })
@@ -144,9 +174,9 @@ export const AppProvider = (props: Props) => {
       dispatch({
         type: 'SET_APP_STATE',
         payload: {
+          ...initialState,
           loading: false,
           wallet,
-          user: initialUser,
         },
       })
     }
