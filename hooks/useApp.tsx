@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useReducer } from 'react'
 
 import {
   connect,
-  ConnectConfig,
   keyStores,
   WalletConnection,
 } from 'near-api-js'
@@ -12,6 +11,7 @@ import vaultContract, {
   StorageBalance,
   VaultContractMetadata,
 } from 'utils/vaultContract'
+import { nearConfig } from 'constants/near'
 
 interface Account {
   accountName: string
@@ -118,13 +118,9 @@ export const AppProvider = (props: Props) => {
   const [state, dispatch] = useReducer(reducer, initialState)
 
   const fetchAppState = async () => {
-    const config: ConnectConfig = {
-      headers: {},
-      networkId: 'testnet',
+    const config = {
+      ...nearConfig,
       keyStore: new keyStores.BrowserLocalStorageKeyStore(),
-      nodeUrl: 'https://rpc.testnet.near.org',
-      walletUrl: 'https://wallet.testnet.near.org',
-      helperUrl: 'https://helper.testnet.near.org',
     }
 
     const wallet = new WalletConnection(await connect(config), 'near-vault')

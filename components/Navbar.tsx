@@ -6,11 +6,14 @@ import { useRouter } from 'next/router'
 
 import { useApp } from 'hooks/useApp'
 import { classNames } from 'utils/classNames'
+import { formatTokenAmount } from 'utils/formatToken'
+import { formatNearAmount } from 'near-api-js/lib/utils/format'
+import { nearSymbol } from 'constants/near'
 
 const Navbar = () => {
   const router = useRouter()
 
-  const { loading, wallet } = useApp()
+  const { loading, wallet, tokenContractMetadata, user } = useApp()
 
   const handleSignIn = () => {
     wallet.requestSignIn()
@@ -60,7 +63,38 @@ const Navbar = () => {
                         leaveFrom="transform opacity-100 scale-100"
                         leaveTo="transform opacity-0 scale-95"
                       >
-                        <Menu.Items className="absolute right-0 mt-2 w-52 rounded-md bg-gray-300 border border-gray-400 neumorphic-flat py-2">
+                        <Menu.Items className="absolute right-0 mt-2 w-80 rounded-md bg-gray-300 border border-gray-400 neumorphic-flat pb-2 focus:outline-none">
+                          <div className="border-b border-gray-400 flex items-start space-x-3 p-4 mb-2">
+                            <div className="flex-shrink-0 p-2 rounded-full neumorphic-pressed-sm">
+                              <UserIcon className="h-6 w-6 text-gray-700" />
+                            </div>
+                            <div className="flex flex-col flex-grow space-y-1">
+                              <p className="text-base font-medium text-gray-800 whitespace-nowrap text-ellipsis overflow-hidden">
+                                {wallet.getAccountId()}
+                              </p>
+                              <ul className="text-sm font-normal text-gray-700">
+                                <li>
+                                  Total balance:
+                                  {` ${formatTokenAmount(
+                                    user.tokenBalance,
+                                    tokenContractMetadata.decimals
+                                  )} ${tokenContractMetadata.symbol}`}
+                                </li>
+                                <li>
+                                  Total storage:
+                                  {` ${formatNearAmount(
+                                    user.storageBalance.total
+                                  )} ${nearSymbol}`}
+                                </li>
+                                <li>
+                                  Available storage:
+                                  {` ${formatNearAmount(
+                                    user.storageBalance.available
+                                  )} ${nearSymbol}`}
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
                           <Menu.Item>
                             {({ active }) => (
                               <span
@@ -124,13 +158,36 @@ const Navbar = () => {
             {!loading && wallet.isSignedIn() ? (
               <React.Fragment>
                 <div className="pt-4 pb-3">
-                  <div className="flex items-center space-x-3 px-5">
+                  <div className="flex items-start space-x-3 px-5">
                     <div className="flex-shrink-0 p-2 rounded-full neumorphic-pressed-sm">
                       <UserIcon className="h-6 w-6 text-gray-700" />
                     </div>
-                    <p className="text-base font-medium text-gray-800 whitespace-nowrap text-ellipsis overflow-hidden">
-                      {wallet.getAccountId()}
-                    </p>
+                    <div className="flex flex-col flex-grow space-y-1">
+                      <p className="text-base font-medium text-gray-800 whitespace-nowrap text-ellipsis overflow-hidden">
+                        {wallet.getAccountId()}
+                      </p>
+                      <ul className="text-sm font-normal text-gray-700">
+                        <li>
+                          Total balance:
+                          {` ${formatTokenAmount(
+                            user.tokenBalance,
+                            tokenContractMetadata.decimals
+                          )} ${tokenContractMetadata.symbol}`}
+                        </li>
+                        <li>
+                          Total storage:
+                          {` ${formatNearAmount(
+                            user.storageBalance.total
+                          )} ${nearSymbol}`}
+                        </li>
+                        <li>
+                          Available storage:
+                          {` ${formatNearAmount(
+                            user.storageBalance.available
+                          )} ${nearSymbol}`}
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                   <div className="pt-3 px-2 space-y-1">
                     <Disclosure.Button
