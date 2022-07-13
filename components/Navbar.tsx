@@ -10,6 +10,8 @@ import { formatTokenAmount } from 'utils/formatToken'
 import { formatNearAmount } from 'near-api-js/lib/utils/format'
 import { nearSymbol } from 'constants/near'
 
+const DISPLAY_FRACTION_DIGITS = 6
+
 const Navbar = () => {
   const router = useRouter()
 
@@ -77,19 +79,22 @@ const Navbar = () => {
                                   Total balance:
                                   {` ${formatTokenAmount(
                                     user.tokenBalance,
-                                    tokenContractMetadata.decimals
+                                    tokenContractMetadata.decimals,
+                                    DISPLAY_FRACTION_DIGITS
                                   )} ${tokenContractMetadata.symbol}`}
                                 </li>
                                 <li>
                                   Total storage:
                                   {` ${formatNearAmount(
-                                    user.storageBalance.total
+                                    user.storageBalance.total,
+                                    DISPLAY_FRACTION_DIGITS
                                   )} ${nearSymbol}`}
                                 </li>
                                 <li>
                                   Available storage:
                                   {` ${formatNearAmount(
-                                    user.storageBalance.available
+                                    user.storageBalance.available,
+                                    DISPLAY_FRACTION_DIGITS
                                   )} ${nearSymbol}`}
                                 </li>
                               </ul>
@@ -171,19 +176,22 @@ const Navbar = () => {
                           Total balance:
                           {` ${formatTokenAmount(
                             user.tokenBalance,
-                            tokenContractMetadata.decimals
+                            tokenContractMetadata.decimals,
+                            DISPLAY_FRACTION_DIGITS
                           )} ${tokenContractMetadata.symbol}`}
                         </li>
                         <li>
                           Total storage:
                           {` ${formatNearAmount(
-                            user.storageBalance.total
+                            user.storageBalance.total,
+                            DISPLAY_FRACTION_DIGITS
                           )} ${nearSymbol}`}
                         </li>
                         <li>
                           Available storage:
                           {` ${formatNearAmount(
-                            user.storageBalance.available
+                            user.storageBalance.available,
+                            DISPLAY_FRACTION_DIGITS
                           )} ${nearSymbol}`}
                         </li>
                       </ul>
