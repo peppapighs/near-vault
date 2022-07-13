@@ -12,6 +12,18 @@ const formatWithCommas = (value: string) => {
   return value
 }
 
+const cleanupAmount = (amount: string) => {
+  return amount.replace(/,/g, '').trim()
+}
+
+const trimLeadingZeroes = (value: string) => {
+  value = value.replace(/^0+/, '')
+  if (value === '') {
+    return '0'
+  }
+  return value
+}
+
 export const formatTokenAmount = (
   balance: string,
   decimals: number,
@@ -31,4 +43,18 @@ export const formatTokenAmount = (
     .padStart(decimals, '0')
     .substring(0, fracDigits)
   return trimTrailingZeroes(`${formatWithCommas(wholeStr)}.${fractionStr}`)
+}
+
+export const parseTokenAmount = (amount: string, decimals: number) => {
+  if (!amount) {
+    return null
+  }
+  amount = cleanupAmount(amount)
+  const split = amount.split('.')
+  const wholePart = split[0]
+  const fracPart = split[1] || ''
+  if (split.length > 2 || fracPart.length > decimals) {
+    return null
+  }
+  return trimLeadingZeroes(wholePart + fracPart.padEnd(decimals, '0'))
 }

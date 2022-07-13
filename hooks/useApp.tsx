@@ -1,17 +1,13 @@
 import React, { useContext, useEffect, useReducer } from 'react'
 
-import {
-  connect,
-  keyStores,
-  WalletConnection,
-} from 'near-api-js'
+import { connect, keyStores, WalletConnection } from 'near-api-js'
 
+import { nearConfig } from 'constants/near'
 import tokenContract, { TokenContractMetadata } from 'utils/tokenContract'
 import vaultContract, {
   StorageBalance,
   VaultContractMetadata,
 } from 'utils/vaultContract'
-import { nearConfig } from 'constants/near'
 
 interface Account {
   accountName: string
@@ -19,6 +15,7 @@ interface Account {
 }
 
 interface UserData {
+  registered: boolean
   tokenBalance: string
   storageBalance: StorageBalance
   accounts: Account[]
@@ -53,6 +50,7 @@ const initialState: AppState = {
     decimals: 0,
   },
   user: {
+    registered: false,
     tokenBalance: '0',
     storageBalance: {
       total: '0',
@@ -132,6 +130,10 @@ export const AppProvider = (props: Props) => {
         })) || []
 
       const user: UserData = {
+        registered:
+          (await vaultContract(wallet.account()).storage_balance_of({
+            account_id: wallet.getAccountId(),
+          })) !== null,
         tokenBalance: await tokenContract(wallet.account()).ft_balance_of({
           account_id: wallet.getAccountId(),
         }),

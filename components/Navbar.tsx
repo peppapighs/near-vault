@@ -7,8 +7,6 @@ import { useRouter } from 'next/router'
 import { useApp } from 'hooks/useApp'
 import { classNames } from 'utils/classNames'
 import { formatTokenAmount } from 'utils/formatToken'
-import { formatNearAmount } from 'near-api-js/lib/utils/format'
-import { nearSymbol } from 'constants/near'
 
 const DISPLAY_FRACTION_DIGITS = 6
 
@@ -39,7 +37,7 @@ const Navbar = () => {
             <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
               <div className="relative flex items-center justify-between h-14">
                 <div className="flex-shrink-0 flex items-center">
-                  <h1 className="w-36 flex items-center justify-center text-xl text-gray-800 font-bold">
+                  <h1 className="w-36 flex items-center justify-center text-xl text-gray-800 font-extrabold">
                     near-vault
                     <span className="inline-flex animate-pulse">_</span>
                   </h1>
@@ -66,38 +64,22 @@ const Navbar = () => {
                         leaveTo="transform opacity-0 scale-95"
                       >
                         <Menu.Items className="absolute right-0 mt-2 w-80 rounded-md bg-gray-300 border border-gray-400 neumorphic-flat pb-2 focus:outline-none">
-                          <div className="border-b border-gray-400 flex items-start space-x-3 p-4 mb-2">
+                          <div className="border-b border-gray-400 flex items-center space-x-3 p-4 mb-2">
                             <div className="flex-shrink-0 p-2 rounded-full neumorphic-pressed-sm">
                               <UserIcon className="h-6 w-6 text-gray-700" />
                             </div>
-                            <div className="flex flex-col flex-grow space-y-1">
+                            <div className="flex flex-col flex-grow">
                               <p className="text-base font-medium text-gray-800 whitespace-nowrap text-ellipsis overflow-hidden">
                                 {wallet.getAccountId()}
                               </p>
-                              <ul className="text-sm font-normal text-gray-700">
-                                <li>
-                                  Total balance:
-                                  {` ${formatTokenAmount(
-                                    user.tokenBalance,
-                                    tokenContractMetadata.decimals,
-                                    DISPLAY_FRACTION_DIGITS
-                                  )} ${tokenContractMetadata.symbol}`}
-                                </li>
-                                <li>
-                                  Total storage:
-                                  {` ${formatNearAmount(
-                                    user.storageBalance.total,
-                                    DISPLAY_FRACTION_DIGITS
-                                  )} ${nearSymbol}`}
-                                </li>
-                                <li>
-                                  Available storage:
-                                  {` ${formatNearAmount(
-                                    user.storageBalance.available,
-                                    DISPLAY_FRACTION_DIGITS
-                                  )} ${nearSymbol}`}
-                                </li>
-                              </ul>
+                              <p className="text-sm font-normal text-gray-600">
+                                Total balance:
+                                {` ${formatTokenAmount(
+                                  user.tokenBalance,
+                                  tokenContractMetadata.decimals,
+                                  DISPLAY_FRACTION_DIGITS
+                                )} ${tokenContractMetadata.symbol}`}
+                              </p>
                             </div>
                           </div>
                           <Menu.Item>
@@ -163,38 +145,22 @@ const Navbar = () => {
             {!loading && wallet.isSignedIn() ? (
               <React.Fragment>
                 <div className="pt-4 pb-3">
-                  <div className="flex items-start space-x-3 px-5">
+                  <div className="flex items-center space-x-3 px-5">
                     <div className="flex-shrink-0 p-2 rounded-full neumorphic-pressed-sm">
                       <UserIcon className="h-6 w-6 text-gray-700" />
                     </div>
-                    <div className="flex flex-col flex-grow space-y-1">
+                    <div className="flex flex-col flex-grow">
                       <p className="text-base font-medium text-gray-800 whitespace-nowrap text-ellipsis overflow-hidden">
                         {wallet.getAccountId()}
                       </p>
-                      <ul className="text-sm font-normal text-gray-700">
-                        <li>
-                          Total balance:
-                          {` ${formatTokenAmount(
-                            user.tokenBalance,
-                            tokenContractMetadata.decimals,
-                            DISPLAY_FRACTION_DIGITS
-                          )} ${tokenContractMetadata.symbol}`}
-                        </li>
-                        <li>
-                          Total storage:
-                          {` ${formatNearAmount(
-                            user.storageBalance.total,
-                            DISPLAY_FRACTION_DIGITS
-                          )} ${nearSymbol}`}
-                        </li>
-                        <li>
-                          Available storage:
-                          {` ${formatNearAmount(
-                            user.storageBalance.available,
-                            DISPLAY_FRACTION_DIGITS
-                          )} ${nearSymbol}`}
-                        </li>
-                      </ul>
+                      <p className="text-sm font-normal text-gray-600">
+                        Total balance:
+                        {` ${formatTokenAmount(
+                          user.tokenBalance,
+                          tokenContractMetadata.decimals,
+                          DISPLAY_FRACTION_DIGITS
+                        )} ${tokenContractMetadata.symbol}`}
+                      </p>
                     </div>
                   </div>
                   <div className="pt-3 px-2 space-y-1">
