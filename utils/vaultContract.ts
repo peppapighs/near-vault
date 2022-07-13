@@ -1,5 +1,24 @@
 import { ConnectedWalletAccount, Contract } from 'near-api-js'
 
+export interface StorageBalance {
+  total: string
+  available: string
+}
+
+export interface VaultContractMetadata {
+  owner_id: string
+  token_id: string
+  transfer_fee_numerator: string
+  transfer_fee_denominator: string
+  user_storage_usage: string
+  account_storage_usage: string
+}
+
+export interface StorageBalanceBounds {
+  min: string
+  max: string | null
+}
+
 interface VaultChangeContract extends Contract {
   create_account: (
     args: {
@@ -30,12 +49,12 @@ interface VaultChangeContract extends Contract {
     },
     gas?: string,
     amount?: string
-  ) => Promise<{ total: string; available: string }>
+  ) => Promise<StorageBalance>
   storage_withdraw: (
     args: { amount?: string },
     gas?: string,
     amount?: string
-  ) => Promise<{ total: string; available: string }>
+  ) => Promise<StorageBalance>
   storage_unregister: (
     args: { force?: boolean },
     gas?: string,
@@ -44,20 +63,13 @@ interface VaultChangeContract extends Contract {
 }
 
 interface VaultViewContract extends Contract {
-  get_metadata: () => Promise<{
-    owner_id: string
-    token_id: string
-    transfer_fee_numerator: string
-    transfer_fee_denominator: string
-    user_storage_usage: string
-    account_storage_usage: string
-  }>
+  get_metadata: () => Promise<VaultContractMetadata>
   get_accounts: (args: { account_id: string }) => Promise<string[] | null>
   get_balance: (args: { account_name: string }) => Promise<string>
-  storage_balance_bounds: () => Promise<{ min: string; max: string | null }>
+  storage_balance_bounds: () => Promise<StorageBalanceBounds>
   storage_balance_of: (args: {
     account_id: string
-  }) => Promise<{ total: string; available: string } | null>
+  }) => Promise<StorageBalance | null>
 }
 
 interface VaultContract extends VaultChangeContract, VaultViewContract {}

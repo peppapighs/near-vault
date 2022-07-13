@@ -8,7 +8,7 @@ import {
 } from 'near-api-js'
 
 import tokenContract from 'utils/tokenContract'
-import vaultContract from 'utils/vaultContract'
+import vaultContract, { StorageBalance } from 'utils/vaultContract'
 
 interface Account {
   accountName: string
@@ -17,10 +17,7 @@ interface Account {
 
 interface UserData {
   tokenBalance: string
-  storageBalance: {
-    total: string
-    available: string
-  }
+  storageBalance: StorageBalance
   accounts: Account[]
 }
 
