@@ -25,7 +25,7 @@ const Navbar = () => {
   }
 
   return (
-    <Disclosure as="nav" className="bg-gray-300 sm:p-4">
+    <Disclosure as="nav" className="bg-gray-300 sm:px-4 sm:pt-4">
       {({ open }) => (
         <React.Fragment>
           <div
@@ -107,9 +107,9 @@ const Navbar = () => {
                       disabled={loading}
                       className={classNames(
                         !loading
-                          ? 'hover:neumorphic-pressed-sm text-gray-700'
-                          : 'text-gray-400',
-                        'inline-flex items-center px-4 py-2 border border-gray-400 text-sm font-medium rounded-md neumorphic-flat-sm focus:neumorphic-pressed-sm focus:outline-none'
+                          ? 'hover:neumorphic-pressed-sm'
+                          : 'text-opacity-50',
+                        'text-gray-700 inline-flex items-center px-4 py-2 border border-gray-400 text-sm font-medium rounded-md neumorphic-flat-sm focus:neumorphic-pressed-sm focus:outline-none'
                       )}
                     >
                       <p className="w-16 text-center">
@@ -124,9 +124,9 @@ const Navbar = () => {
                     disabled={loading}
                     className={classNames(
                       !loading
-                        ? 'hover:neumorphic-pressed-sm text-gray-700'
-                        : 'text-gray-400',
-                      'inline-flex items-center justify-center p-2 rounded-md focus:neumorphic-pressed-sm focus:outline-none'
+                        ? 'hover:neumorphic-pressed-sm'
+                        : 'text-opacity-50',
+                      'text-gray-700 inline-flex items-center justify-center p-2 rounded-md focus:neumorphic-pressed-sm focus:outline-none'
                     )}
                   >
                     <span className="sr-only">Open menu</span>
