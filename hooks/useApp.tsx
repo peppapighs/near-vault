@@ -143,9 +143,10 @@ export const AppProvider = (props: Props) => {
           })) || initialState.user.storageBalance,
         accounts: await Promise.all(
           accountNames.map(async (accountName) => {
-            const balance = await vaultContract(wallet.account()).get_balance({
-              account_name: accountName,
-            })
+            const balance =
+              (await vaultContract(wallet.account()).get_balance({
+                account_name: accountName,
+              })) || '0'
             return { accountName, balance }
           })
         ),
