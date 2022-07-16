@@ -69,7 +69,10 @@ pub mod tests {
         let account = contract.accounts.get(&"account".to_owned()).unwrap();
         assert_eq!(account.owner_id, accounts(1));
         assert_eq!(account.balance, 0);
-        assert_eq!(contract.get_balance("account".to_owned()), 0.into());
+        assert_eq!(
+            contract.get_balance("account".to_owned()).unwrap(),
+            0.into()
+        );
         assert_eq!(
             contract.get_accounts(accounts(1).clone()).unwrap(),
             vec!["account"]
@@ -117,14 +120,13 @@ pub mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Account does not exist")]
     fn test_get_balance_non_existent_account() {
         let mut context = get_context(accounts(1));
         testing_env!(context.build());
         let contract = Contract::new(accounts(1), accounts(2), 1.into(), 100.into());
 
         testing_env!(context.is_view(true).build());
-        contract.get_balance("account".into());
+        assert_eq!(contract.get_balance("account".into()), None);
     }
 
     #[test]
@@ -152,7 +154,10 @@ pub mod tests {
         )
         .into_string();
         contract.ft_on_transfer(accounts(1), 1.into(), msg.clone());
-        assert_eq!(contract.get_balance("account".to_owned()), 1.into());
+        assert_eq!(
+            contract.get_balance("account".to_owned()).unwrap(),
+            1.into()
+        );
     }
 
     #[test]
@@ -249,7 +254,10 @@ pub mod tests {
         testing_env!(context.attached_deposit(1).build());
         contract.withdraw("account".into(), 1.into());
 
-        assert_eq!(contract.get_balance("account".to_owned()), 0.into());
+        assert_eq!(
+            contract.get_balance("account".to_owned()).unwrap(),
+            0.into()
+        );
     }
 
     #[test]
@@ -361,8 +369,14 @@ pub mod tests {
         let context = get_context(accounts(1));
         testing_env!(context.build());
         contract.transfer("account_1".into(), "account_2".into(), 1.into());
-        assert_eq!(contract.get_balance("account_1".to_owned()), 0.into());
-        assert_eq!(contract.get_balance("account_2".to_owned()), 2.into());
+        assert_eq!(
+            contract.get_balance("account_1".to_owned()).unwrap(),
+            0.into()
+        );
+        assert_eq!(
+            contract.get_balance("account_2".to_owned()).unwrap(),
+            2.into()
+        );
     }
 
     #[test]
@@ -410,8 +424,14 @@ pub mod tests {
         let context = get_context(accounts(1));
         testing_env!(context.build());
         contract.transfer("account_1".into(), "account_2".into(), 100.into());
-        assert_eq!(contract.get_balance("account_1".to_owned()), 0.into());
-        assert_eq!(contract.get_balance("account_2".to_owned()), 199.into());
+        assert_eq!(
+            contract.get_balance("account_1".to_owned()).unwrap(),
+            0.into()
+        );
+        assert_eq!(
+            contract.get_balance("account_2".to_owned()).unwrap(),
+            199.into()
+        );
         assert_eq!(contract.total_transfer_fee, 1);
     }
 

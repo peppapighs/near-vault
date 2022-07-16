@@ -238,13 +238,11 @@ impl Contract {
     }
 
     // Get balance of an account
-    pub fn get_balance(&self, account_name: String) -> U128 {
+    pub fn get_balance(&self, account_name: String) -> Option<U128> {
         // Get account by account account name
         self.accounts
             .get(&account_name)
-            .unwrap_or_else(|| panic!("Account does not exist"))
-            .balance
-            .into()
+            .map(|account| account.balance.into())
     }
 }
 
