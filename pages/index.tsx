@@ -9,7 +9,7 @@ import StorageStake from 'components/StorageStake'
 import { useApp } from 'hooks/useApp'
 
 const Home: NextPage = () => {
-  const { loading, wallet } = useApp()
+  const { loading, wallet, user } = useApp()
 
   return (
     <Layout>
@@ -22,7 +22,7 @@ const Home: NextPage = () => {
       ) : (
         <div className="flex flex-col items-center mt-2">
           <StorageStake />
-          <CreateAccount />
+          {user.registered && <CreateAccount />}
         </div>
       )}
     </Layout>
