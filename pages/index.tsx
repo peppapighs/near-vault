@@ -2,11 +2,11 @@ import React from 'react'
 
 import type { NextPage } from 'next'
 
-import Account from 'components/Account'
-import CreateAccount from 'components/CreateAccount'
+import AccountContainer from 'components/account/AccountContainer'
+import CreateAccount from 'components/account/CreateAccount'
 import Layout from 'components/Layout'
 import Spinner from 'components/Spinner'
-import StorageStake from 'components/StorageStake'
+import StorageStake from 'components/storage/StorageStake'
 import { useApp } from 'hooks/useApp'
 
 const Home: NextPage = () => {
@@ -25,9 +25,7 @@ const Home: NextPage = () => {
           <StorageStake />
           {user.registered && (
             <React.Fragment>
-              {user.accounts.map((account) => (
-                <Account key={account.accountName} account={account} />
-              ))}
+              <AccountContainer />
               <CreateAccount />
             </React.Fragment>
           )}

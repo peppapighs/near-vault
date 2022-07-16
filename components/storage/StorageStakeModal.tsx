@@ -4,12 +4,13 @@ import { Dialog, Transition } from '@headlessui/react'
 import { BN } from 'bn.js'
 import { NEAR_NOMINATION_EXP } from 'near-api-js/lib/utils/format'
 
-import { StorageStakeAction } from 'components/StorageStake'
 import { nearSymbol } from 'constants/near'
 import { useApp } from 'hooks/useApp'
 import { classNames } from 'utils/classNames'
 import { parseTokenAmount } from 'utils/formatToken'
 import vaultContract from 'utils/vaultContract'
+
+import { StorageStakeAction } from './StorageStake'
 
 interface Props {
   open: boolean
