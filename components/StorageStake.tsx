@@ -25,7 +25,7 @@ const StorageStake = () => {
       <Disclosure
         defaultOpen={!user.registered}
         as="div"
-        className="w-full max-w-3xl px-4 py-2"
+        className="w-full max-w-3xl p-4"
       >
         {({ open }) => (
           <div className="border border-gray-400 rounded-md neumorphic-flat flex flex-col">
@@ -50,9 +50,9 @@ const StorageStake = () => {
             </Disclosure.Button>
 
             <Disclosure.Panel className="flex flex-col px-4 pb-2">
-              <div className="my-auto flex flex-col gap-2 item-centers text-gray-600 my-2 sm:block sm:grid sm:grid-cols-2 sm:gap-4">
+              <div className="my-auto flex flex-col gap-2 item-centers text-gray-600 my-2 sm:grid sm:grid-cols-2 sm:gap-4">
                 {!user.registered && (
-                  <div className="p-4 rounded-md neumorphic-pressed col-span-2">
+                  <div className="px-4 py-2 rounded-md neumorphic-pressed col-span-2">
                     <p className="text-sm font-normal">
                       Looks like you are not registered! Please register your
                       account by depositing storage below.
@@ -60,7 +60,7 @@ const StorageStake = () => {
                   </div>
                 )}
                 {user.registered && (
-                  <div className="p-4 rounded-md neumorphic-pressed">
+                  <div className="px-4 py-2 rounded-md neumorphic-pressed">
                     <label className="text-sm font-normal">
                       Total storage:
                     </label>
@@ -73,7 +73,7 @@ const StorageStake = () => {
                   </div>
                 )}
                 {user.registered && (
-                  <div className="p-4 rounded-md neumorphic-pressed">
+                  <div className="px-4 py-2 rounded-md neumorphic-pressed">
                     <label className="text-sm font-normal">
                       Available storage:
                     </label>
@@ -86,7 +86,7 @@ const StorageStake = () => {
                   </div>
                 )}
               </div>
-              <div className="py-2 flex flex-col gap-2 sm:block sm:grid sm:grid-cols-3 sm:gap-4">
+              <div className="py-2 grid grid-cols-3 gap-2 sm:gap-4">
                 <button
                   type="button"
                   onClick={() => {

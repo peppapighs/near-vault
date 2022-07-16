@@ -2,6 +2,7 @@ import React from 'react'
 
 import type { NextPage } from 'next'
 
+import Account from 'components/Account'
 import CreateAccount from 'components/CreateAccount'
 import Layout from 'components/Layout'
 import Spinner from 'components/Spinner'
@@ -22,7 +23,14 @@ const Home: NextPage = () => {
       ) : (
         <div className="flex flex-col items-center mt-2">
           <StorageStake />
-          {user.registered && <CreateAccount />}
+          {user.registered && (
+            <React.Fragment>
+              {user.accounts.map((account) => (
+                <Account key={account.accountName} account={account} />
+              ))}
+              <CreateAccount />
+            </React.Fragment>
+          )}
         </div>
       )}
     </Layout>

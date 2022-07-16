@@ -9,7 +9,7 @@ import vaultContract, {
   VaultContractMetadata,
 } from 'utils/vaultContract'
 
-interface Account {
+export interface Account {
   accountName: string
   balance: string
 }
