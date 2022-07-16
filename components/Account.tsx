@@ -20,7 +20,7 @@ const Account = (props: Props) => {
       <div className="p-4 w-full border border-gray-400 rounded-md neumorphic-flat">
         <div className="flex flex-col justify-between">
           <div className="flex flex-col gap-2 sm:gap-4">
-            <p className="text-gray-800 text-lg font-bold whitespace-nowrap text-ellipsis overflow-hidden sm:text-xl">
+            <p className="text-gray-900 text-lg font-bold whitespace-nowrap text-ellipsis overflow-hidden sm:text-xl">
               <CurrencyDollarIcon className="inline-flex h-6 w-6 mb-1 mr-1" />
               {props.account.accountName}
             </p>

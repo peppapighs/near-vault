@@ -30,7 +30,7 @@ const StorageStake = () => {
         {({ open }) => (
           <div className="border border-gray-400 rounded-md neumorphic-flat flex flex-col">
             <Disclosure.Button className="flex justify-between space-x-3 p-4 focus:outline-none">
-              <h1 className="my-auto text-base font-bold text-gray-800">
+              <h1 className="my-auto text-base font-bold text-gray-900">
                 Your Storage Balance
               </h1>
               <div className="my-auto text-gray-700 inline-flex items-center justify-center">

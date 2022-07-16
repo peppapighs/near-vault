@@ -218,18 +218,18 @@ const StorageStakeModal = ({ open, setOpen, action }: Props) => {
                     <div
                       className={classNames(
                         error !== '' ? 'border border-red-500' : '',
-                        'mt-1 py-2 relative rounded-md neumorphic-pressed-sm'
+                        'mt-1 py-2 rounded-md neumorphic-pressed-sm flex space-x-2'
                       )}
                     >
                       <input
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        className="block bg-transparent w-full pl-3 pr-16 sm:text-sm rounded-md focus:outline-none"
+                        className="block bg-transparent w-full pl-3 focus:outline-none"
                         placeholder="0.00"
                         aria-describedby="currency"
                       />
-                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <div className="pr-3 flex items-center pointer-events-none">
                         <span
                           className="text-gray-600 sm:text-sm"
                           id="currency"
