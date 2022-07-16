@@ -25,10 +25,10 @@ const StorageStake = () => {
       <Disclosure
         defaultOpen={!user.registered}
         as="div"
-        className="flex justify-center p-4"
+        className="w-full max-w-3xl px-4 py-2"
       >
         {({ open }) => (
-          <div className="flex-grow max-w-5xl border border-gray-400 rounded neumorphic-flat flex flex-col">
+          <div className="border border-gray-400 rounded-md neumorphic-flat flex flex-col">
             <Disclosure.Button className="flex justify-between space-x-3 p-4 focus:outline-none">
               <h1 className="my-auto text-base font-bold text-gray-800">
                 Your Storage Balance
@@ -52,7 +52,7 @@ const StorageStake = () => {
             <Disclosure.Panel className="flex flex-col px-4 pb-2">
               <div className="my-auto flex flex-col gap-2 item-centers text-gray-600 my-2 sm:block sm:grid sm:grid-cols-2 sm:gap-4">
                 {!user.registered && (
-                  <div className="p-4 rounded neumorphic-pressed col-span-2">
+                  <div className="p-4 rounded-md neumorphic-pressed col-span-2">
                     <p className="text-sm font-normal">
                       Looks like you are not registered! Please register your
                       account by depositing storage below.
@@ -60,7 +60,7 @@ const StorageStake = () => {
                   </div>
                 )}
                 {user.registered && (
-                  <div className="p-4 rounded neumorphic-pressed">
+                  <div className="p-4 rounded-md neumorphic-pressed">
                     <label className="text-sm font-normal">
                       Total storage:
                     </label>
@@ -73,7 +73,7 @@ const StorageStake = () => {
                   </div>
                 )}
                 {user.registered && (
-                  <div className="p-4 rounded neumorphic-pressed">
+                  <div className="p-4 rounded-md neumorphic-pressed">
                     <label className="text-sm font-normal">
                       Available storage:
                     </label>

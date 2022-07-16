@@ -2,6 +2,7 @@ import React from 'react'
 
 import type { NextPage } from 'next'
 
+import CreateAccount from 'components/CreateAccount'
 import Layout from 'components/Layout'
 import Spinner from 'components/Spinner'
 import StorageStake from 'components/StorageStake'
@@ -19,8 +20,9 @@ const Home: NextPage = () => {
       ) : !wallet.isSignedIn() ? (
         <React.Fragment></React.Fragment>
       ) : (
-        <div className="mt-2">
+        <div className="flex flex-col items-center mt-2">
           <StorageStake />
+          <CreateAccount />
         </div>
       )}
     </Layout>

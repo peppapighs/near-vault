@@ -33,10 +33,10 @@ const Navbar = () => {
           <div
             className={classNames(
               !open ? 'neumorphic-flat' : 'sm:neumorphic-flat',
-              'border border-gray-400 sm:rounded'
+              'border border-gray-400 sm:rounded-md'
             )}
           >
-            <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+            <div className="max-w-5xl mx-auto px-2 sm:px-6 lg:px-8">
               <div className="relative flex items-center justify-between h-14">
                 <div className="flex-shrink-0 flex items-center">
                   <h1 className="w-36 flex items-center justify-center text-xl text-gray-800 font-extrabold">

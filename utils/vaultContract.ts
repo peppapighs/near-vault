@@ -65,7 +65,7 @@ interface VaultChangeContract extends Contract {
 interface VaultViewContract extends Contract {
   get_metadata: () => Promise<VaultContractMetadata>
   get_accounts: (args: { account_id: string }) => Promise<string[] | null>
-  get_balance: (args: { account_name: string }) => Promise<string>
+  get_balance: (args: { account_name: string }) => Promise<string | null>
   storage_balance_bounds: () => Promise<StorageBalanceBounds>
   storage_balance_of: (args: {
     account_id: string
