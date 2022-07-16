@@ -8,6 +8,8 @@ import { useApp } from 'hooks/useApp'
 import { classNames } from 'utils/classNames'
 import { formatTokenAmount } from 'utils/formatToken'
 
+import Spinner from './Spinner'
+
 const DISPLAY_FRACTION_DIGITS = 6
 
 const Navbar = () => {
@@ -112,8 +114,12 @@ const Navbar = () => {
                         'text-gray-700 inline-flex items-center px-4 py-2 border border-gray-400 text-sm font-medium rounded-md neumorphic-flat-sm focus:neumorphic-pressed-sm focus:outline-none'
                       )}
                     >
-                      <p className="w-16 text-center">
-                        {loading ? '...' : 'Sign in'}
+                      <p className="w-16 text-center flex justify-center">
+                        {loading ? (
+                          <Spinner className="animate-spin h-5 w-5 text-gray-700" />
+                        ) : (
+                          'Sign in'
+                        )}
                       </p>
                     </button>
                   )}
@@ -130,7 +136,9 @@ const Navbar = () => {
                     )}
                   >
                     <span className="sr-only">Open menu</span>
-                    {open ? (
+                    {loading ? (
+                      <Spinner className="animate-spin h-5 w-5 text-gray-700" />
+                    ) : open ? (
                       <XIcon className="block h-6 w-6" aria-hidden="true" />
                     ) : (
                       <MenuIcon className="block h-6 w-6" aria-hidden="true" />
