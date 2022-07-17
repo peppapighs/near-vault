@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build:contract": "cd contract && cargo build --target wasm32-unknown-unknown --release",
-    "build:web": "next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
