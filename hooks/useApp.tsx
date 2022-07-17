@@ -64,17 +64,6 @@ type AppAction =
   | { type: 'LOADING_START' }
   | { type: 'LOADING_END' }
   | { type: 'SET_APP_STATE'; payload: AppState }
-  | { type: 'SET_WALLET'; payload: WalletConnection }
-  | { type: 'SET_USER'; payload: UserData }
-  | {
-      type: 'SET_USER_BALANCE'
-      payload: {
-        tokenBalance: string
-        storageBalanceTotal: string
-        storageBalanceAvailable: string
-      }
-    }
-  | { type: 'SET_USER_ACCOUNT'; payload: Account[] }
 
 const reducer = (state: AppState, action: AppAction) => {
   switch (action.type) {
@@ -84,14 +73,6 @@ const reducer = (state: AppState, action: AppAction) => {
       return { ...state, loading: false }
     case 'SET_APP_STATE':
       return { ...state, ...action.payload }
-    case 'SET_WALLET':
-      return { ...state, wallet: action.payload }
-    case 'SET_USER':
-      return { ...state, user: action.payload }
-    case 'SET_USER_BALANCE':
-      return { ...state, user: { ...state.user, ...action.payload } }
-    case 'SET_USER_ACCOUNT':
-      return { ...state, user: { ...state.user, accounts: action.payload } }
   }
 }
 
@@ -112,7 +93,7 @@ interface Props {
   children: React.ReactNode
 }
 
-export const AppProvider = (props: Props) => {
+export const AppProvider = ({ children }: Props) => {
   const [state, dispatch] = useReducer(reducer, initialState)
 
   const fetchAppState = async () => {
@@ -187,7 +168,7 @@ export const AppProvider = (props: Props) => {
 
   return (
     <AppStateContext.Provider value={{ ...state, dispatch, fetchAppState }}>
-      {props.children}
+      {children}
     </AppStateContext.Provider>
   )
 }

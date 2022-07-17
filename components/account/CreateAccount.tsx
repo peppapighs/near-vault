@@ -22,6 +22,7 @@ const CreateAccount = () => {
   }
 
   const onSubmit = async () => {
+    setError('')
     try {
       await vaultContract(wallet.account()).create_account({
         account_name: input,
@@ -36,11 +37,6 @@ const CreateAccount = () => {
 
   useEffect(() => {
     const checkUnique = async () => {
-      setError('')
-      if (input === '') {
-        setDisableConfirm(false)
-        return
-      }
       try {
         if (
           (await vaultContract(wallet.account()).get_balance({
@@ -49,6 +45,7 @@ const CreateAccount = () => {
         ) {
           throw new Error('Account name already exists')
         }
+        setError('')
         setDisableConfirm(false)
       } catch (error) {
         if (error instanceof Error) {
@@ -58,9 +55,9 @@ const CreateAccount = () => {
       }
     }
 
-    setError('')
     setDisableConfirm(true)
     if (input === '') {
+      setError('')
       return
     }
     checkUnique()
@@ -129,10 +126,7 @@ const CreateAccount = () => {
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        className={classNames(
-                          error !== '' ? 'border border-red-500' : '',
-                          'block bg-transparent px-3 py-2 neumorphic-pressed-sm w-full sm:text-sm border-gray-300 rounded-md focus:outline-none'
-                        )}
+                        className="block bg-transparent px-3 py-2 neumorphic-pressed-sm w-full sm:text-sm border-gray-300 rounded-md focus:outline-none"
                       />
                     </div>
                   </div>

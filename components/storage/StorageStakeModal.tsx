@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 import { Dialog, Transition } from '@headlessui/react'
 import { BN } from 'bn.js'
@@ -10,59 +10,56 @@ import { classNames } from 'utils/classNames'
 import { parseTokenAmount } from 'utils/formatToken'
 import vaultContract from 'utils/vaultContract'
 
-import { StorageStakeAction } from './StorageStake'
+import { useStorageStakeState } from './StorageContext'
 
-interface Props {
-  open: boolean
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>
-  action: StorageStakeAction
-}
+const StorageStakeModal = () => {
+  const { open, action, dispatch } = useStorageStakeState()
 
-const StorageStakeModal = ({ open, setOpen, action }: Props) => {
-  const TITLE =
-    action === 'deposit'
-      ? 'Deposit Storage?'
-      : action === 'withdraw'
-      ? 'Withdraw Storage?'
-      : action === 'unregister'
-      ? 'Unregister Storage?'
-      : ''
-
-  const DESCRIPTION =
-    action === 'deposit'
-      ? [
-          `Enter the amount of ${nearSymbol} you want to deposit below (recommended: 0.1 ${nearSymbol}).`,
-        ]
-      : action === 'withdraw'
-      ? [
-          `Enter the amount of ${nearSymbol} you want to withdraw below.`,
-          'Leave the amount empty to withdraw all.',
-        ]
-      : action === 'unregister'
-      ? [
-          'This action cannot be undone! You will lose all your accounts (including stored tokens).',
-          'Make sure you have withdrawn your tokens from all of your accounts.',
-          'Enter your wallet ID below to proceed.',
-        ]
-      : ['']
-
-  const INPUT_LABEL =
-    action === 'deposit'
-      ? 'Amount to deposit'
-      : action === 'withdraw'
-      ? 'Amount to withdraw'
-      : action === 'unregister'
-      ? 'Your wallet ID'
-      : ''
-
-  const CONFIRM_BUTTON_LABEL =
-    action === 'deposit'
-      ? 'Deposit'
-      : action === 'withdraw'
-      ? 'Withdraw'
-      : action === 'unregister'
-      ? 'Unregister'
-      : ''
+  const state = useMemo(() => {
+    return {
+      title:
+        action === 'deposit'
+          ? 'Deposit Storage?'
+          : action === 'withdraw'
+          ? 'Withdraw Storage?'
+          : action === 'unregister'
+          ? 'Unregister Storage?'
+          : '',
+      description:
+        action === 'deposit'
+          ? [
+              `Enter the amount of ${nearSymbol} you want to deposit below (recommended: 0.1 ${nearSymbol}).`,
+            ]
+          : action === 'withdraw'
+          ? [
+              `Enter the amount of ${nearSymbol} you want to withdraw below.`,
+              'Leave the amount empty to withdraw all.',
+            ]
+          : action === 'unregister'
+          ? [
+              'This action cannot be undone! You will lose all your accounts (including stored tokens).',
+              'Make sure you have withdrawn your tokens from all of your accounts.',
+              'Enter your wallet ID below to proceed.',
+            ]
+          : [''],
+      inputLabel:
+        action === 'deposit'
+          ? 'Amount to deposit'
+          : action === 'withdraw'
+          ? 'Amount to withdraw'
+          : action === 'unregister'
+          ? 'Your wallet ID'
+          : '',
+      confirmButtonLabel:
+        action === 'deposit'
+          ? 'Deposit'
+          : action === 'withdraw'
+          ? 'Withdraw'
+          : action === 'unregister'
+          ? 'Unregister'
+          : '',
+    }
+  }, [action])
 
   const { wallet } = useApp()
 
@@ -71,7 +68,7 @@ const StorageStakeModal = ({ open, setOpen, action }: Props) => {
   const [error, setError] = useState<string>('')
 
   const closeModal = () => {
-    setOpen(false)
+    dispatch({ type: 'SET_OPEN', payload: false })
     setInput('')
     setDisableConfirm(true)
     setError('')
@@ -140,8 +137,8 @@ const StorageStakeModal = ({ open, setOpen, action }: Props) => {
   }
 
   useEffect(() => {
-    setError('')
     if (input === '') {
+      setError('')
       setDisableConfirm(action !== 'withdraw')
       return
     }
@@ -161,6 +158,7 @@ const StorageStakeModal = ({ open, setOpen, action }: Props) => {
           }
           break
       }
+      setError('')
       setDisableConfirm(false)
     } catch (error) {
       if (error instanceof Error) {
@@ -201,10 +199,10 @@ const StorageStakeModal = ({ open, setOpen, action }: Props) => {
                   as="h3"
                   className="text-lg font-medium leading-6 text-gray-900"
                 >
-                  {TITLE}
+                  {state.title}
                 </Dialog.Title>
                 <div className="mt-2 flex flex-col space-y-4">
-                  {DESCRIPTION.map((line, index) => (
+                  {state.description.map((line, index) => (
                     <p key={index} className="text-sm text-gray-600">
                       {line}
                     </p>
@@ -214,14 +212,9 @@ const StorageStakeModal = ({ open, setOpen, action }: Props) => {
                 {action === 'deposit' || action === 'withdraw' ? (
                   <div className="mt-2">
                     <label className="block text-sm font-medium text-gray-800">
-                      {INPUT_LABEL}
+                      {state.inputLabel}
                     </label>
-                    <div
-                      className={classNames(
-                        error !== '' ? 'border border-red-500' : '',
-                        'mt-1 py-2 rounded-md neumorphic-pressed-sm flex space-x-2'
-                      )}
-                    >
+                    <div className="mt-1 py-2 rounded-md neumorphic-pressed-sm flex space-x-2">
                       <input
                         type="text"
                         value={input}
@@ -243,17 +236,14 @@ const StorageStakeModal = ({ open, setOpen, action }: Props) => {
                 ) : (
                   <div className="mt-2">
                     <label className="block text-sm font-medium text-gray-800">
-                      {INPUT_LABEL}
+                      {state.inputLabel}
                     </label>
                     <div className="mt-1">
                       <input
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        className={classNames(
-                          error !== '' ? 'border border-red-500' : '',
-                          'block bg-transparent px-3 py-2 neumorphic-pressed-sm w-full sm:text-sm border-gray-300 rounded-md focus:outline-none'
-                        )}
+                        className="block bg-transparent px-3 py-2 neumorphic-pressed-sm w-full sm:text-sm border-gray-300 rounded-md focus:outline-none"
                       />
                     </div>
                   </div>
@@ -282,7 +272,7 @@ const StorageStakeModal = ({ open, setOpen, action }: Props) => {
                       'text-red-700 inline-flex items-center justify-center px-4 py-2 border border-gray-400 text-sm font-medium rounded-md neumorphic-flat-sm focus:neumorphic-pressed-sm focus:outline-none'
                     )}
                   >
-                    {CONFIRM_BUTTON_LABEL}
+                    {state.confirmButtonLabel}
                   </button>
                 </div>
               </Dialog.Panel>

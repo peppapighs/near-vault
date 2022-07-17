@@ -1,8 +1,12 @@
+import React from 'react'
+
 import { CurrencyDollarIcon } from '@heroicons/react/outline'
 import { useRouter } from 'next/router'
 
 import { Account as IAccount, useApp } from 'hooks/useApp'
 import { formatTokenAmount } from 'utils/formatToken'
+
+import { useAccountState } from './AccountContext'
 
 interface Props {
   account: IAccount
@@ -10,10 +14,11 @@ interface Props {
 
 const DISPLAY_FRACTION_DIGITS = 10
 
-const Account = (props: Props) => {
+const Account = ({ account }: Props) => {
   const router = useRouter()
 
   const { tokenContractMetadata } = useApp()
+  const { dispatch } = useAccountState()
 
   return (
     <div className="w-full max-w-3xl px-4 py-2">
@@ -22,13 +27,13 @@ const Account = (props: Props) => {
           <div className="flex flex-col gap-2 sm:gap-4">
             <p className="text-gray-900 text-lg font-bold whitespace-nowrap text-ellipsis overflow-hidden sm:text-xl">
               <CurrencyDollarIcon className="inline-flex h-6 w-6 mb-1 mr-1" />
-              {props.account.accountName}
+              {account.accountName}
             </p>
             <div className="text-gray-600 px-4 py-2 rounded-md neumorphic-pressed">
               <label className="text-sm font-normal">Balance:</label>
               <p className="text-lg font-bold whitespace-nowrap text-ellipsis overflow-hidden sm:text-xl">
                 {`${formatTokenAmount(
-                  props.account.balance,
+                  account.balance,
                   tokenContractMetadata.decimals,
                   DISPLAY_FRACTION_DIGITS
                 )} ${tokenContractMetadata.symbol}`}
@@ -39,9 +44,13 @@ const Account = (props: Props) => {
             <button
               type="button"
               onClick={() =>
-                router.push({
-                  pathname: '/deposit',
-                  query: { accountName: props.account.accountName },
+                dispatch({
+                  type: 'SET_ACCOUNT_STATE',
+                  payload: {
+                    open: true,
+                    action: 'deposit',
+                    account,
+                  },
                 })
               }
               className="text-gray-700 inline-flex items-center justify-center px-4 py-2 border border-gray-400 text-sm font-medium rounded-md neumorphic-flat-sm hover:neumorphic-pressed-sm focus:neumorphic-pressed-sm focus:outline-none"
@@ -50,12 +59,32 @@ const Account = (props: Props) => {
             </button>
             <button
               type="button"
+              onClick={() =>
+                dispatch({
+                  type: 'SET_ACCOUNT_STATE',
+                  payload: {
+                    open: true,
+                    action: 'withdraw',
+                    account,
+                  },
+                })
+              }
               className="text-gray-700 inline-flex items-center justify-center px-4 py-2 border border-gray-400 text-sm font-medium rounded-md neumorphic-flat-sm hover:neumorphic-pressed-sm focus:neumorphic-pressed-sm focus:outline-none"
             >
               Withdraw
             </button>
             <button
               type="button"
+              onClick={() =>
+                dispatch({
+                  type: 'SET_ACCOUNT_STATE',
+                  payload: {
+                    open: true,
+                    action: 'transfer',
+                    account,
+                  },
+                })
+              }
               className="text-gray-700 inline-flex items-center justify-center px-4 py-2 border border-gray-400 text-sm font-medium rounded-md neumorphic-flat-sm hover:neumorphic-pressed-sm focus:neumorphic-pressed-sm focus:outline-none"
             >
               Transfer

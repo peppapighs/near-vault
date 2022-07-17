@@ -8,17 +8,14 @@ import { nearSymbol } from 'constants/near'
 import { useApp } from 'hooks/useApp'
 import { classNames } from 'utils/classNames'
 
+import { useStorageStakeState } from './StorageContext'
 import StorageStakeModal from './StorageStakeModal'
 
 const DISPLAY_FRACTION_DIGITS = 6
 
-export type StorageStakeAction = 'deposit' | 'withdraw' | 'unregister' | ''
-
 const StorageStake = () => {
   const { user } = useApp()
-
-  const [open, setOpen] = useState<boolean>(false)
-  const [action, setAction] = useState<StorageStakeAction>('')
+  const { dispatch } = useStorageStakeState()
 
   return (
     <React.Fragment>
@@ -89,10 +86,15 @@ const StorageStake = () => {
               <div className="py-2 grid grid-cols-3 gap-2 sm:gap-4">
                 <button
                   type="button"
-                  onClick={() => {
-                    setAction('deposit')
-                    setOpen(true)
-                  }}
+                  onClick={() =>
+                    dispatch({
+                      type: 'SET_STORAGE_STAKE_STATE',
+                      payload: {
+                        open: true,
+                        action: 'deposit',
+                      },
+                    })
+                  }
                   className="text-gray-700 inline-flex items-center justify-center px-4 py-2 border border-gray-400 text-sm font-medium rounded-md neumorphic-flat-sm hover:neumorphic-pressed-sm focus:neumorphic-pressed-sm focus:outline-none"
                 >
                   Deposit
@@ -100,10 +102,15 @@ const StorageStake = () => {
                 <button
                   type="button"
                   disabled={!user.registered}
-                  onClick={() => {
-                    setAction('withdraw')
-                    setOpen(true)
-                  }}
+                  onClick={() =>
+                    dispatch({
+                      type: 'SET_STORAGE_STAKE_STATE',
+                      payload: {
+                        open: true,
+                        action: 'withdraw',
+                      },
+                    })
+                  }
                   className={classNames(
                     user.registered
                       ? 'hover:neumorphic-pressed-sm'
@@ -116,10 +123,15 @@ const StorageStake = () => {
                 <button
                   type="button"
                   disabled={!user.registered}
-                  onClick={() => {
-                    setAction('unregister')
-                    setOpen(true)
-                  }}
+                  onClick={() =>
+                    dispatch({
+                      type: 'SET_STORAGE_STAKE_STATE',
+                      payload: {
+                        open: true,
+                        action: 'unregister',
+                      },
+                    })
+                  }
                   className={classNames(
                     user.registered
                       ? 'hover:neumorphic-pressed-sm'
@@ -135,7 +147,7 @@ const StorageStake = () => {
         )}
       </Disclosure>
 
-      <StorageStakeModal open={open} setOpen={setOpen} action={action} />
+      <StorageStakeModal />
     </React.Fragment>
   )
 }
