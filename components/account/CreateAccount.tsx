@@ -69,7 +69,7 @@ const CreateAccount = () => {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="p-4 w-full h-36 text-gray-700 text-opacity-50 border-2 border-dashed border-gray-400 text-base font-bold text-center rounded-md neumorphic-flat hover:neumorphic-pressed focus:neumorphic-pressed focus:outline-none"
+          className="p-4 w-full h-36 text-gray-700 border-2 border-dashed border-gray-400 text-base font-bold text-center rounded-md neumorphic-flat hover:neumorphic-pressed focus:neumorphic-pressed focus:outline-none"
         >
           + Create new account
         </button>
