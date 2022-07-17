@@ -7,6 +7,7 @@ import CreateAccount from 'components/account/CreateAccount'
 import Layout from 'components/Layout'
 import Spinner from 'components/Spinner'
 import StorageStake from 'components/storage/StorageStake'
+import Welcome from 'components/Welcome'
 import { useApp } from 'hooks/useApp'
 
 const Home: NextPage = () => {
@@ -19,7 +20,7 @@ const Home: NextPage = () => {
           <Spinner className="animate-spin text-gray-500 h-16 w-16" />
         </div>
       ) : !wallet.isSignedIn() ? (
-        <React.Fragment></React.Fragment>
+        <Welcome />
       ) : (
         <div className="flex flex-col items-center mt-2">
           <StorageStake />
